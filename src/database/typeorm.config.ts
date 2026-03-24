@@ -58,8 +58,8 @@ export function getTypeOrmConfig(config: ConfigService): DataSourceOptions {
     database: config.get<string>('DB_DATABASE', 'edmaj'),
     entities,
     synchronize: config.get<string>('TYPEORM_SYNC', 'false') === 'true',
-    migrationsRun: isProduction,
-    migrations: [__dirname + '/migrations/*{.ts,.js}'],
+    migrationsRun: false,
+    migrations: [],
     ...(isProduction && {
       ssl: { rejectUnauthorized: false },
     }),
