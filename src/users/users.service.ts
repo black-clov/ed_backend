@@ -129,7 +129,7 @@ export class UsersService {
 
   async validatePassword(userId: string, password: string): Promise<boolean> {
     const user = await this.usersRepo.findOne({ where: { id: userId } });
-    if (!user) return false;
+    if (!user || !user.passwordHash) return false;
     return bcrypt.compare(password, user.passwordHash);
   }
 
@@ -143,5 +143,62 @@ export class UsersService {
 
   async countUsers() {
     return this.usersRepo.count();
+  }
+
+  async findByGoogleId(googleId: string) {
+    return this.usersRepo.findOne({ where: { googleId } });
+  }
+
+  async findOrCreateGoogleUser(profile: {
+    googleId: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    avatarUrl?: string;
+  }) {
+    // Check if user exists by Google ID
+    let user = await this.findByGoogleId(profile.googleId);
+    if (user) {
+      // Update avatar if changed
+      if (profile.avatarUrl && user.avatarUrl !== profile.avatarUrl) {
+        user.avatarUrl = profile.avatarUrl;
+        await this.usersRepo.save(user);
+      }
+      const { passwordHash: _, resetToken: _rt, resetTokenExpires: _rte, ...result } = user;
+      return result;
+    }
+
+    // Check if user exists by email (link accounts)
+    user = await this.findByEmail(profile.email);
+    if (user) {
+      user.googleId = profile.googleId;
+      user.authProvider = user.authProvider === 'local' ? 'local+google' : 'google';
+      if (profile.avatarUrl) user.avatarUrl = profile.avatarUrl;
+      await this.usersRepo.save(user);
+      const { passwordHash: _, resetToken: _rt, resetTokenExpires: _rte, ...result } = user;
+      return result;
+    }
+
+    // Create new user with Google profile
+    const newUser = this.usersRepo.create({
+      googleId: profile.googleId,
+      email: profile.email,
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      avatarUrl: profile.avatarUrl || null,
+      authProvider: 'google',
+      passwordHash: null,
+    });
+
+    try {
+      const saved = await this.usersRepo.save(newUser);
+      const { passwordHash: _, ...result } = saved;
+      return result;
+    } catch (err: any) {
+      if (err.code === '23505') {
+        throw new ConflictException('Email already registered');
+      }
+      throw new InternalServerErrorException('Could not create user');
+    }
   }
 }

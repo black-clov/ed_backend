@@ -30,8 +30,17 @@ export class UserEntity {
   @Column({ type: 'varchar', length: 20, default: 'user' })
   role!: string;
 
-  @Column({ type: 'varchar', length: 255 })
-  passwordHash!: string;
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  passwordHash!: string | null;
+
+  @Column({ name: 'google_id', type: 'varchar', length: 255, nullable: true, unique: true })
+  googleId!: string | null;
+
+  @Column({ name: 'avatar_url', type: 'varchar', length: 500, nullable: true })
+  avatarUrl!: string | null;
+
+  @Column({ name: 'auth_provider', type: 'varchar', length: 20, default: 'local' })
+  authProvider!: string;
 
   @Column({ name: 'reset_token', type: 'varchar', length: 255, nullable: true })
   resetToken!: string | null;

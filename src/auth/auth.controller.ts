@@ -3,12 +3,14 @@ import { AuthService } from './auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { Public } from './public.decorator';
 import { RequestResetDto, ResetPasswordDto, ChangePasswordDto } from './dto/password.dto';
+import { UsersService } from '../users/users.service';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly jwtService: JwtService,
+    private readonly usersService: UsersService,
   ) {}
 
   @Public()
@@ -45,5 +47,27 @@ export class AuthController {
   async changePassword(@Body() dto: ChangePasswordDto, @Req() req: any) {
     const userId = req.user.sub;
     return this.authService.changePassword(userId, dto.currentPassword, dto.newPassword);
+  }
+
+  @Public()
+  @Post('google')
+  async googleLogin(@Body() dto: { idToken: string }) {
+    if (!dto.idToken) {
+      throw new UnauthorizedException('Google ID token is required');
+    }
+    // Verify Google ID token
+    const googleUser = await this.authService.verifyGoogleToken(dto.idToken);
+    // Find or create user
+    const user = await this.usersService.findOrCreateGoogleUser({
+      googleId: googleUser.sub,
+      email: googleUser.email,
+      firstName: googleUser.given_name || '',
+      lastName: googleUser.family_name || '',
+      avatarUrl: googleUser.picture || undefined,
+    });
+    // Issue JWT
+    const payload = { email: user.email, sub: user.id, role: user.role };
+    const access_token = this.jwtService.sign(payload);
+    return { access_token, userId: user.id, role: user.role };
   }
 }
