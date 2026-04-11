@@ -7,12 +7,13 @@ import { SkillEntity } from './entities/skill.entity';
 @Injectable()
 export class SkillsService {
   private readonly catalog = [
-    'communication',
-    'digital skills',
-    'manual skills',
-    'teamwork',
-    'creativity',
-    'negotiation',
+    'مهارات التواصل',
+    'المهارات الرقمية',
+    'المهارات التقنية/اليدوية',
+    'العمل الجماعي',
+    'إدارة الوقت',
+    'الإبداع',
+    'المبيعات/التفاوض',
   ];
 
   constructor(
