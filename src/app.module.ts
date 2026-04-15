@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -28,6 +30,7 @@ import { CommTrainingModule } from './commtraining/commtraining.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { AnalyticsInterceptor } from './analytics/analytics.interceptor';
 import { AdminModule } from './admin/admin.module';
+import { ContentModule } from './content/content.module';
 import { getTypeOrmConfig } from './database/typeorm.config';
 
 
@@ -35,6 +38,11 @@ import { getTypeOrmConfig } from './database/typeorm.config';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public'),
+      serveRoot: '/panel',
+      exclude: ['/api/(.*)'],
+    }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => getTypeOrmConfig(config),
@@ -61,6 +69,7 @@ import { getTypeOrmConfig } from './database/typeorm.config';
     CommTrainingModule,
     AnalyticsModule,
     AdminModule,
+    ContentModule,
   ],
   controllers: [AppController],
   providers: [

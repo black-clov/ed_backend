@@ -9,11 +9,15 @@ import { CvEntity } from '../cv/entities/cv.entity';
 import { InterviewSessionEntity } from '../interview/entities/interview-session.entity';
 import { BusinessPlanEntity } from '../businessplan/entities/business-plan.entity';
 import { PitchEntity } from '../pitch/entities/pitch.entity';
+import { VideosModule } from '../videos/videos.module';
+import { ContentModule } from '../content/content.module';
 
 @Module({
   imports: [
     UsersModule,
     AnalyticsModule,
+    VideosModule,
+    ContentModule,
     TypeOrmModule.forFeature([
       QuestionnaireAnswerEntity,
       CvEntity,

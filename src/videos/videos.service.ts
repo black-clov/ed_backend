@@ -2,6 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { VideoEntity } from './entities/video.entity';
+import { CreateVideoDto, UpdateVideoDto } from './dto/video-crud.dto';
 
 @Injectable()
 export class VideosService implements OnModuleInit {
@@ -90,5 +91,24 @@ export class VideosService implements OnModuleInit {
       { id: 'opportunities', label: 'البحث عن الفرص' },
       { id: 'entrepreneurship', label: 'ريادة الأعمال' },
     ];
+  }
+
+  // ── Admin CRUD ──────────────────────────────────
+  async findAllAdmin(): Promise<VideoEntity[]> {
+    return this.videosRepo.find({ order: { createdAt: 'DESC' } });
+  }
+
+  async create(dto: CreateVideoDto): Promise<VideoEntity> {
+    const entity = this.videosRepo.create(dto);
+    return this.videosRepo.save(entity);
+  }
+
+  async update(id: string, dto: UpdateVideoDto): Promise<VideoEntity | null> {
+    await this.videosRepo.update(id, dto);
+    return this.videosRepo.findOne({ where: { id } });
+  }
+
+  async remove(id: string): Promise<void> {
+    await this.videosRepo.delete(id);
   }
 }
