@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -9,8 +9,12 @@ import { InterviewSessionEntity } from '../interview/entities/interview-session.
 import { BusinessPlanEntity } from '../businessplan/entities/business-plan.entity';
 import { PitchEntity } from '../pitch/entities/pitch.entity';
 
+const ADMIN_EMAIL = 'mouhsine.elmoudir@gmail.com';
+
 @Injectable()
-export class AdminService {
+export class AdminService implements OnModuleInit {
+  private readonly logger = new Logger(AdminService.name);
+
   constructor(
     private readonly usersService: UsersService,
     private readonly analyticsService: AnalyticsService,
@@ -25,6 +29,14 @@ export class AdminService {
     @InjectRepository(PitchEntity)
     private readonly pitchRepo: Repository<PitchEntity>,
   ) {}
+
+  async onModuleInit() {
+    const user = await this.usersService.findByEmail(ADMIN_EMAIL);
+    if (user && user.role !== 'admin') {
+      await this.usersService.updateRole(user.id, 'admin');
+      this.logger.log(`Promoted ${ADMIN_EMAIL} to admin`);
+    }
+  }
 
   async getDashboardStats() {
     const [

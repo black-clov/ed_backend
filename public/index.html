@@ -197,10 +197,10 @@ async function doLogin(){
     const res = await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pw})});
     if(!res.ok){errEl.textContent='بيانات خاطئة';errEl.style.display='block';return;}
     const data = await res.json();
-    if(data.user && data.user.role !== 'admin'){errEl.textContent='ليس لديك صلاحيات المدير';errEl.style.display='block';return;}
+    if(data.role && data.role !== 'admin'){errEl.textContent='ليس لديك صلاحيات المدير';errEl.style.display='block';return;}
     token = data.access_token || data.token;
     localStorage.setItem('admin_token', token);
-    showApp(data.user);
+    showApp({email});
   }catch(e){errEl.textContent='خطأ في الاتصال';errEl.style.display='block';}
 }
 
