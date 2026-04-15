@@ -1,26 +1,33 @@
 import {
   Controller,
   Post,
+  Get,
+  Param,
+  Res,
   UseGuards,
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  NotFoundException,
+  StreamableFile,
+  Header,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { Public } from '../auth/public.decorator';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
-import { existsSync, mkdirSync } from 'fs';
+import { existsSync, mkdirSync, createReadStream } from 'fs';
 import { randomUUID } from 'crypto';
 
-const uploadsDir = join(__dirname, '..', '..', 'uploads');
+export const uploadsDir = join(__dirname, '..', '..', 'uploads');
 
-@Controller('admin/upload')
-@UseGuards(RolesGuard)
-@Roles('admin')
+@Controller()
 export class UploadController {
-  @Post()
+  @Post('admin/upload')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
@@ -45,8 +52,28 @@ export class UploadController {
   )
   upload(@UploadedFile() file: Express.Multer.File) {
     if (!file) throw new BadRequestException('No file uploaded');
-    // Build public URL — works behind the /uploads static route
-    const url = `/uploads/${file.filename}`;
+    const url = `/api/uploads/${file.filename}`;
     return { ok: true, url, filename: file.filename, size: file.size };
+  }
+
+  @Get('uploads/:filename')
+  @Public()
+  serveFile(@Param('filename') filename: string): StreamableFile {
+    // Sanitise filename — prevent directory traversal
+    const safe = filename.replace(/[^a-zA-Z0-9._-]/g, '');
+    const filePath = join(uploadsDir, safe);
+    if (!existsSync(filePath)) throw new NotFoundException('File not found');
+    const ext = extname(safe).toLowerCase();
+    const mimeMap: Record<string, string> = {
+      '.mp4': 'video/mp4', '.mov': 'video/quicktime', '.avi': 'video/x-msvideo',
+      '.mkv': 'video/x-matroska', '.webm': 'video/webm', '.mp3': 'audio/mpeg',
+      '.pdf': 'application/pdf', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
+      '.png': 'image/png', '.gif': 'image/gif', '.webp': 'image/webp',
+    };
+    const stream = createReadStream(filePath);
+    return new StreamableFile(stream, {
+      type: mimeMap[ext] || 'application/octet-stream',
+      disposition: 'inline',
+    });
   }
 }

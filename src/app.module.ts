@@ -38,18 +38,11 @@ import { getTypeOrmConfig } from './database/typeorm.config';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    ServeStaticModule.forRoot(
-      {
-        rootPath: join(__dirname, '..', 'public'),
-        serveRoot: '/panel',
-        exclude: ['/api/(.*)'],
-      },
-      {
-        rootPath: join(__dirname, '..', 'uploads'),
-        serveRoot: '/uploads',
-        exclude: ['/api/(.*)'],
-      },
-    ),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public'),
+      serveRoot: '/panel',
+      exclude: ['/api/(.*)'],
+    }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => getTypeOrmConfig(config),

@@ -1,9 +1,12 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { existsSync, mkdirSync } from 'fs';
 import { AppModule } from './app.module';
+import { uploadsDir } from './admin/upload.controller';
 
 async function bootstrap() {
+  if (!existsSync(uploadsDir)) mkdirSync(uploadsDir, { recursive: true });
   const app = await NestFactory.create(AppModule);
   const config = app.get(ConfigService);
 
