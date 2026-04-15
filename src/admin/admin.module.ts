@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AdminController } from './admin.controller';
+import { UploadController } from './upload.controller';
 import { AdminService } from './admin.service';
 import { UsersModule } from '../users/users.module';
 import { AnalyticsModule } from '../analytics/analytics.module';
@@ -26,7 +27,7 @@ import { ContentModule } from '../content/content.module';
       PitchEntity,
     ]),
   ],
-  controllers: [AdminController],
+  controllers: [AdminController, UploadController],
   providers: [AdminService],
 })
 export class AdminModule {}

@@ -120,7 +120,13 @@ th{background:#f0f4ff;font-weight:600}
     <input type="hidden" id="videoId">
     <label>العنوان</label><input id="vTitle">
     <label>الوصف</label><textarea id="vDesc"></textarea>
-    <label>رابط الفيديو (YouTube / خارجي)</label><input id="vUrl" dir="ltr">
+
+    <label>رابط الفيديو (YouTube / خارجي)</label><input id="vUrl" dir="ltr" placeholder="https://youtube.com/watch?v=...">
+    <div style="text-align:center;color:var(--muted);margin:-0.5rem 0 0.5rem">— أو —</div>
+    <label>رفع ملف فيديو</label>
+    <input type="file" id="vFile" accept="video/*" onchange="uploadVideoFile(this)">
+    <div id="vUploadStatus" style="font-size:.85rem;color:var(--muted);margin-bottom:.5rem;display:none"></div>
+
     <label>رابط الصورة المصغرة</label><input id="vThumb" dir="ltr">
     <label>التصنيف</label>
     <select id="vCat">
@@ -357,6 +363,24 @@ async function toggleRole(id, current){
   if(!confirm('تغيير الدور إلى '+newRole+'؟')) return;
   await api('PATCH','/admin/users/'+id+'/role',{role:newRole});
   loadUsers();
+}
+
+// ── FILE UPLOAD ──
+async function uploadVideoFile(input){
+  const file=input.files[0]; if(!file)return;
+  const status=document.getElementById('vUploadStatus');
+  status.style.display='block'; status.style.color='var(--primary)';
+  status.textContent='جاري الرفع... '+Math.round(file.size/1024/1024)+'MB';
+  try{
+    const form=new FormData(); form.append('file',file);
+    const r=await fetch(API+'/admin/upload',{method:'POST',headers:{'Authorization':'Bearer '+token},body:form});
+    if(!r.ok) throw new Error(await r.text());
+    const data=await r.json();
+    // Build full URL from the relative path
+    const fullUrl = location.origin + data.url;
+    document.getElementById('vUrl').value = fullUrl;
+    status.style.color='var(--success)'; status.textContent='✅ تم الرفع بنجاح';
+  }catch(e){status.style.color='var(--danger)'; status.textContent='❌ فشل الرفع: '+e.message;}
 }
 
 // ── HELPERS ──
