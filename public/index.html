@@ -266,7 +266,9 @@ async function saveVideo(){
   const id=document.getElementById('videoId').value;
   const title=document.getElementById('vTitle').value.trim();
   const videoUrl=document.getElementById('vUrl').value.trim();
-  if(!title||!videoUrl){showToast('العنوان ورابط الفيديو مطلوبين','error');return;}
+  if(!title&&!videoUrl){showToast('يجب إدخال العنوان ورابط الفيديو','error');return;}
+  if(!title){showToast('يجب إدخال عنوان الفيديو','error');return;}
+  if(!videoUrl){showToast('يجب إدخال رابط الفيديو أو رفع ملف فيديو','error');return;}
   const body={title:title,description:document.getElementById('vDesc').value||'',videoUrl:videoUrl,category:document.getElementById('vCat').value,durationSeconds:parseInt(document.getElementById('vDur').value)||0,order:parseInt(document.getElementById('vOrder').value)||0};
   const thumb=document.getElementById('vThumb').value.trim();
   if(thumb) body.thumbnailUrl=thumb;

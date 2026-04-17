@@ -21,6 +21,7 @@ import { EntBarrierEntity } from '../entbarriers/entities/ent-barrier.entity';
 import { SupportPreferenceEntity } from '../support/entities/support-preference.entity';
 import { CommTrainingEntity } from '../commtraining/entities/comm-training.entity';
 import { AnalyticsEventEntity } from '../analytics/entities/analytics-event.entity';
+import { ContentEntity } from '../content/entities/content.entity';
 
 export const entities = [
   UserEntity,
@@ -44,6 +45,7 @@ export const entities = [
   SupportPreferenceEntity,
   CommTrainingEntity,
   AnalyticsEventEntity,
+  ContentEntity,
 ];
 
 export function getTypeOrmConfig(config: ConfigService): DataSourceOptions {
