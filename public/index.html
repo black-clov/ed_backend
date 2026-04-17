@@ -263,12 +263,12 @@ async function deleteVideo(id){
   finally{hideLoading();}
 }
 async function saveVideo(){
+  if(_videoUploading){showToast('انتظر حتى ينتهي رفع الفيديو...','error');return;}
   const id=document.getElementById('videoId').value;
   const title=document.getElementById('vTitle').value.trim();
   const videoUrl=document.getElementById('vUrl').value.trim();
-  if(!title&&!videoUrl){showToast('يجب إدخال العنوان ورابط الفيديو','error');return;}
   if(!title){showToast('يجب إدخال عنوان الفيديو','error');return;}
-  if(!videoUrl){showToast('يجب إدخال رابط الفيديو أو رفع ملف فيديو','error');return;}
+  if(!videoUrl){showToast('يجب إدخال رابط الفيديو أو رفع ملف فيديو (انتظر حتى ينتهي الرفع)','error');return;}
   const body={title:title,description:document.getElementById('vDesc').value||'',videoUrl:videoUrl,category:document.getElementById('vCat').value,durationSeconds:parseInt(document.getElementById('vDur').value)||0,order:parseInt(document.getElementById('vOrder').value)||0};
   const thumb=document.getElementById('vThumb').value.trim();
   if(thumb) body.thumbnailUrl=thumb;
@@ -351,19 +351,32 @@ async function toggleRole(id,current){
   finally{hideLoading();}
 }
 
+let _videoUploading=false;
 async function uploadVideoFile(input){
   const file=input.files[0];if(!file)return;
   const status=document.getElementById('vUploadStatus');
+  const saveBtn=document.querySelector('#videoModal .btn-primary');
   status.style.display='block';status.style.color='var(--primary)';
-  status.textContent='جاري الرفع... '+Math.round(file.size/1024/1024)+'MB';
+  status.textContent='جاري الرفع... 0% ('+Math.round(file.size/1024/1024)+'MB)';
+  _videoUploading=true;
+  if(saveBtn){saveBtn.style.opacity='0.5';saveBtn.textContent='⏳ جاري الرفع...';}
   try{
     const form=new FormData();form.append('file',file);
-    const r=await fetch(API+'/admin/upload',{method:'POST',headers:{'Authorization':'Bearer '+token},body:form});
-    if(!r.ok)throw new Error(await r.text());
-    const data=await r.json();
+    const data=await new Promise((resolve,reject)=>{
+      const xhr=new XMLHttpRequest();
+      xhr.open('POST',API+'/admin/upload');
+      xhr.setRequestHeader('Authorization','Bearer '+token);
+      xhr.upload.onprogress=function(e){if(e.lengthComputable){const pct=Math.round(e.loaded/e.total*100);status.textContent='جاري الرفع... '+pct+'% ('+Math.round(file.size/1024/1024)+'MB)';}};
+      xhr.onload=function(){if(xhr.status>=200&&xhr.status<300){resolve(JSON.parse(xhr.responseText));}else{reject(new Error(xhr.responseText||'فشل الرفع'));}};
+      xhr.onerror=function(){reject(new Error('خطأ في الاتصال'));};
+      xhr.ontimeout=function(){reject(new Error('انتهت المهلة'));};
+      xhr.timeout=600000;
+      xhr.send(form);
+    });
     document.getElementById('vUrl').value=location.origin+data.url;
     status.style.color='var(--success)';status.textContent='✅ تم رفع الفيديو بنجاح';
   }catch(e){status.style.color='var(--danger)';status.textContent='❌ فشل الرفع: '+e.message;}
+  finally{_videoUploading=false;if(saveBtn){saveBtn.style.opacity='1';saveBtn.textContent='حفظ';}}
 }
 async function uploadThumbFile(input){
   const file=input.files[0];if(!file)return;
