@@ -2,169 +2,320 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>لوحة تحكم إدماج</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-:root{--primary:#1565c0;--primary-light:#e3f2fd;--bg:#f5f7fa;--card:#fff;--border:#e0e0e0;--danger:#c62828;--success:#2e7d32;--text:#212121;--muted:#757575}
-body{font-family:'Segoe UI',Tahoma,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-a{color:var(--primary);text-decoration:none}
-.login-wrap{display:none;align-items:center;justify-content:center;min-height:100vh}
-.login-card{background:var(--card);padding:2.5rem;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.1);width:360px;max-width:95vw}
-.login-card h1{text-align:center;margin-bottom:1.5rem;color:var(--primary);font-size:1.5rem}
-.login-card input{width:100%;padding:.75rem 1rem;margin-bottom:1rem;border:1px solid var(--border);border-radius:8px;font-size:1rem}
-.login-card button{width:100%;padding:.75rem;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:1rem;cursor:pointer}
-.login-card button:hover{opacity:.9}
-.login-error{color:var(--danger);font-size:.85rem;margin-bottom:.5rem;text-align:center;display:none}
+:root{
+  --primary:#1a73e8;--primary-hover:#1557b0;--primary-light:#e8f0fe;
+  --bg:#f8f9fa;--surface:#fff;--border:#dadce0;
+  --danger:#d93025;--danger-hover:#b3261e;
+  --success:#1e8e3e;--success-hover:#137333;
+  --text:#202124;--text-secondary:#5f6368;
+  --shadow:0 1px 3px rgba(0,0,0,.1),0 1px 2px rgba(0,0,0,.06);
+  --shadow-lg:0 4px 16px rgba(0,0,0,.12);
+  --radius:8px;--radius-lg:12px;
+}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.5}
+
+/* Login */
+.login-wrap{display:none;align-items:center;justify-content:center;min-height:100vh;padding:1rem}
+.login-card{background:var(--surface);padding:2.5rem 2rem;border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);width:380px;max-width:100%}
+.login-card h1{text-align:center;margin-bottom:.5rem;font-size:1.5rem;font-weight:600;color:var(--text)}
+.login-card .subtitle{text-align:center;color:var(--text-secondary);margin-bottom:2rem;font-size:.9rem}
+.login-card .field{margin-bottom:1rem}
+.login-card .field label{display:block;font-size:.85rem;font-weight:500;margin-bottom:.35rem;color:var(--text)}
+.login-card .field input{width:100%;padding:.65rem .85rem;border:1px solid var(--border);border-radius:var(--radius);font-size:.95rem;transition:border-color .2s}
+.login-card .field input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-light)}
+.login-card button{width:100%;padding:.7rem;background:var(--primary);color:#fff;border:none;border-radius:var(--radius);font-size:.95rem;font-weight:500;cursor:pointer;transition:background .2s;margin-top:.5rem}
+.login-card button:hover{background:var(--primary-hover)}
+.login-error{color:var(--danger);font-size:.85rem;margin-bottom:.75rem;text-align:center;display:none;padding:.5rem;background:#fce8e6;border-radius:var(--radius)}
+
+/* App Shell */
 .app{display:none}
-.topbar{background:linear-gradient(135deg,#1565c0,#1976d2);color:#fff;padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,.15)}
-.topbar h1{font-size:1.2rem;font-weight:700}
-.topbar button{background:rgba(255,255,255,.2);color:#fff;border:none;padding:.5rem 1rem;border-radius:6px;cursor:pointer;transition:background .2s}
-.topbar button:hover{background:rgba(255,255,255,.35)}
-.tabs{display:flex;background:var(--card);border-bottom:2px solid var(--border);padding:0 2rem}
-.tabs button{background:none;border:none;padding:.75rem 1.25rem;font-size:.95rem;cursor:pointer;border-bottom:3px solid transparent;color:var(--muted);transition:all .2s}
-.tabs button.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:600}
-.tabs button:hover{color:var(--primary)}
-.panel{display:none;padding:1.5rem 2rem;max-width:1100px;margin:0 auto}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:.75rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.topbar h1{font-size:1.1rem;font-weight:600;color:var(--text)}
+.topbar .right{display:flex;align-items:center;gap:.75rem}
+.topbar .admin-name{font-size:.85rem;color:var(--text-secondary)}
+.topbar .btn-logout{background:none;border:1px solid var(--border);padding:.4rem .85rem;border-radius:var(--radius);cursor:pointer;font-size:.85rem;color:var(--text-secondary);transition:all .2s}
+.topbar .btn-logout:hover{border-color:var(--danger);color:var(--danger)}
+
+.tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);padding:0 1.5rem;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tabs button{background:none;border:none;padding:.7rem 1.1rem;font-size:.9rem;cursor:pointer;border-bottom:2px solid transparent;color:var(--text-secondary);transition:all .15s;white-space:nowrap;font-weight:500}
+.tabs button.active{color:var(--primary);border-bottom-color:var(--primary)}
+.tabs button:hover{color:var(--primary);background:var(--primary-light)}
+
+.panel{display:none;padding:1.5rem;max-width:1200px;margin:0 auto}
 .panel.active{display:block}
-.card{background:var(--card);border-radius:10px;padding:1.5rem;margin-bottom:1.5rem;box-shadow:0 1px 4px rgba(0,0,0,.06)}
-.card h2{font-size:1.1rem;margin-bottom:1rem;color:var(--primary)}
-table{width:100%;border-collapse:collapse}
-th,td{text-align:right;padding:.6rem .75rem;border-bottom:1px solid var(--border);font-size:.9rem}
-th{background:#f0f4ff;font-weight:600}
-.btn{padding:.4rem .9rem;border:none;border-radius:6px;cursor:pointer;font-size:.85rem;margin-inline-start:.3rem;transition:opacity .2s}
-.btn-primary{background:var(--primary);color:#fff}
-.btn-danger{background:var(--danger);color:#fff}
-.btn-success{background:var(--success);color:#fff}
-.btn:hover{opacity:.85}
-.add-bar{display:flex;justify-content:flex-end;margin-bottom:1rem}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:1000}
+
+/* Cards & Tables */
+.card{background:var(--surface);border-radius:var(--radius-lg);padding:1.25rem 1.5rem;margin-bottom:1.25rem;box-shadow:var(--shadow);border:1px solid var(--border)}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.card-header h2{font-size:1rem;font-weight:600;color:var(--text)}
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;min-width:500px}
+th,td{text-align:right;padding:.65rem .75rem;font-size:.875rem}
+th{background:var(--bg);font-weight:600;color:var(--text-secondary);border-bottom:2px solid var(--border);white-space:nowrap}
+td{border-bottom:1px solid #f0f0f0}
+tr:hover td{background:#fafbfc}
+.thumb-cell img{width:40px;height:40px;border-radius:6px;object-fit:cover}
+.thumb-cell .no-img{width:40px;height:40px;border-radius:6px;background:var(--bg);display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:12px;font-weight:600}
+
+/* Buttons */
+.btn{padding:.4rem .85rem;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;font-size:.8rem;font-weight:500;transition:all .15s;background:var(--surface);color:var(--text)}
+.btn:hover{background:var(--bg)}
+.btn-primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+.btn-primary:hover{background:var(--primary-hover);border-color:var(--primary-hover)}
+.btn-danger{background:none;color:var(--danger);border-color:var(--danger)}
+.btn-danger:hover{background:var(--danger);color:#fff}
+.btn-sm{padding:.3rem .65rem;font-size:.75rem}
+.actions{display:flex;gap:.35rem}
+
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem}
+.stat-card{background:var(--surface);border-radius:var(--radius-lg);padding:1.25rem;box-shadow:var(--shadow);border:1px solid var(--border);transition:transform .15s}
+.stat-card:hover{transform:translateY(-2px)}
+.stat-card .label{font-size:.8rem;color:var(--text-secondary);font-weight:500;margin-bottom:.5rem}
+.stat-card .value{font-size:1.8rem;font-weight:700;color:var(--primary)}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:flex-start;justify-content:center;z-index:1000;padding:2rem 1rem;overflow-y:auto}
 .modal-overlay.open{display:flex}
-.modal{background:var(--card);border-radius:12px;padding:2rem;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto}
-.modal h2{margin-bottom:1.2rem;color:var(--primary)}
-.modal label{display:block;margin-bottom:.3rem;font-weight:500;font-size:.9rem}
-.modal input,.modal select,.modal textarea{width:100%;padding:.6rem .8rem;margin-bottom:1rem;border:1px solid var(--border);border-radius:6px;font-size:.95rem}
-.modal textarea{min-height:100px;resize:vertical}
-.modal-actions{display:flex;justify-content:flex-end;gap:.5rem;margin-top:.5rem}
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem;margin-bottom:1.5rem}
-.stat-card{background:var(--card);border-radius:12px;padding:1.2rem;text-align:center;box-shadow:0 1px 6px rgba(0,0,0,.06);transition:transform .2s,box-shadow .2s;border:1px solid var(--border)}
-.stat-card:hover{transform:translateY(-3px);box-shadow:0 4px 12px rgba(0,0,0,.1)}
-.stat-card .icon{font-size:1.8rem;margin-bottom:.4rem}
-.stat-card .num{font-size:2.2rem;font-weight:700;color:var(--primary)}
-.stat-card .lbl{font-size:.85rem;color:var(--muted);margin-top:.3rem}
-.loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.75);display:none;align-items:center;justify-content:center;z-index:2000;flex-direction:column;gap:1rem}
+.modal{background:var(--surface);border-radius:var(--radius-lg);width:580px;max-width:100%;box-shadow:var(--shadow-lg);animation:modalIn .2s ease}
+@keyframes modalIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.modal-head{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-head h2{font-size:1rem;font-weight:600}
+.modal-head .close-btn{background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--text-secondary);padding:.25rem;line-height:1}
+.modal-head .close-btn:hover{color:var(--text)}
+.modal-body{padding:1.5rem}
+.form-group{margin-bottom:1rem}
+.form-group label{display:block;font-size:.85rem;font-weight:500;margin-bottom:.35rem;color:var(--text)}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:.55rem .75rem;border:1px solid var(--border);border-radius:var(--radius);font-size:.9rem;transition:border-color .15s;font-family:inherit}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-light)}
+.form-group textarea{min-height:90px;resize:vertical}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.form-divider{text-align:center;color:var(--text-secondary);font-size:.8rem;margin:-.25rem 0 .75rem;position:relative}
+.form-divider::before,.form-divider::after{content:'';position:absolute;top:50%;width:35%;height:1px;background:var(--border)}
+.form-divider::before{right:0}
+.form-divider::after{left:0}
+.modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:.5rem}
+.upload-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:.85rem;text-align:center;cursor:pointer;transition:all .15s;margin-top:.35rem;font-size:.85rem;color:var(--text-secondary)}
+.upload-zone:hover{border-color:var(--primary);background:var(--primary-light);color:var(--primary)}
+.upload-zone input[type=file]{display:none}
+.upload-zone .preview{max-width:100px;max-height:70px;border-radius:6px;margin-top:.4rem}
+.upload-status{font-size:.8rem;margin-top:.35rem;padding:.4rem .6rem;border-radius:var(--radius);display:none}
+.upload-status.info{display:block;background:var(--primary-light);color:var(--primary)}
+.upload-status.ok{display:block;background:#e6f4ea;color:var(--success)}
+.upload-status.err{display:block;background:#fce8e6;color:var(--danger)}
+.progress-bar{width:100%;height:4px;background:var(--border);border-radius:2px;margin-top:.35rem;overflow:hidden;display:none}
+.progress-bar.show{display:block}
+.progress-bar .fill{height:100%;background:var(--primary);border-radius:2px;transition:width .15s}
+.badge{display:inline-block;padding:.15rem .5rem;border-radius:10px;font-size:.75rem;font-weight:500}
+.badge-admin{background:var(--primary-light);color:var(--primary)}
+.badge-user{background:var(--bg);color:var(--text-secondary)}
+.badge-yes{background:#e6f4ea;color:var(--success)}
+.badge-no{background:#fce8e6;color:var(--danger)}
+
+/* Loading & Toast */
+.loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.8);display:none;align-items:center;justify-content:center;z-index:2000;flex-direction:column;gap:.75rem}
 .loading-overlay.show{display:flex}
-.spinner{width:44px;height:44px;border:4px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.loading-overlay .msg{font-size:1rem;color:var(--primary);font-weight:600}
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);padding:.75rem 1.5rem;border-radius:10px;color:#fff;font-size:.95rem;z-index:3000;opacity:0;transition:all .3s;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+.loading-overlay .msg{font-size:.9rem;color:var(--text-secondary);font-weight:500}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(16px);padding:.6rem 1.25rem;border-radius:var(--radius);color:#fff;font-size:.875rem;z-index:3000;opacity:0;transition:all .25s;pointer-events:none;box-shadow:var(--shadow-lg)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .toast.success{background:var(--success)}
 .toast.error{background:var(--danger)}
-.thumb-cell img{width:48px;height:48px;border-radius:8px;object-fit:cover}
-.thumb-cell .no-img{width:48px;height:48px;border-radius:8px;background:var(--primary-light);display:flex;align-items:center;justify-content:center;color:var(--primary);font-size:20px}
-.upload-area{border:2px dashed var(--border);border-radius:10px;padding:1rem;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;margin-bottom:1rem}
-.upload-area:hover{border-color:var(--primary);background:var(--primary-light)}
-.upload-area input[type=file]{display:none}
-.upload-area .preview{max-width:120px;max-height:80px;border-radius:8px;margin-top:.5rem}
+
+/* Responsive */
+@media(max-width:768px){
+  .topbar{padding:.6rem 1rem}
+  .topbar h1{font-size:.95rem}
+  .tabs{padding:0 .75rem}
+  .tabs button{padding:.6rem .75rem;font-size:.82rem}
+  .panel{padding:1rem}
+  .stats-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.75rem}
+  .stat-card .value{font-size:1.4rem}
+  .modal{width:100%}
+  .form-row{grid-template-columns:1fr}
+  .card{padding:1rem}
+}
+@media(max-width:480px){
+  .topbar{flex-wrap:wrap;gap:.5rem}
+  .topbar .right{width:100%;justify-content:flex-end}
+  .stats-grid{grid-template-columns:1fr 1fr;gap:.5rem}
+  .stat-card{padding:.85rem}
+}
 </style>
 </head>
 <body>
 <div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div><div class="msg" id="loadingMsg">جاري التحميل...</div></div>
 <div class="toast" id="toast"></div>
 
+<!-- Login -->
 <div class="login-wrap" id="loginWrap">
   <div class="login-card">
-    <h1>🔐 لوحة تحكم إدماج</h1>
+    <h1>لوحة تحكم إدماج</h1>
+    <p class="subtitle">سجّل الدخول للمتابعة</p>
     <div class="login-error" id="loginErr"></div>
-    <input type="email" id="loginEmail" placeholder="البريد الإلكتروني" autocomplete="email">
-    <input type="password" id="loginPw" placeholder="كلمة المرور" autocomplete="current-password">
+    <div class="field">
+      <label>البريد الإلكتروني</label>
+      <input type="email" id="loginEmail" autocomplete="email">
+    </div>
+    <div class="field">
+      <label>كلمة المرور</label>
+      <input type="password" id="loginPw" autocomplete="current-password">
+    </div>
     <button onclick="doLogin()">تسجيل الدخول</button>
   </div>
 </div>
 
+<!-- App -->
 <div class="app" id="app">
   <div class="topbar">
-    <h1>📊 لوحة تحكم إدماج</h1>
-    <div><span id="adminName" style="margin-left:12px"></span><button onclick="logout()">خروج</button></div>
+    <h1>لوحة تحكم إدماج</h1>
+    <div class="right">
+      <span class="admin-name" id="adminName"></span>
+      <button class="btn-logout" onclick="logout()">تسجيل الخروج</button>
+    </div>
   </div>
   <div class="tabs">
-    <button class="active" onclick="showTab('stats',this)">📈 إحصائيات</button>
-    <button onclick="showTab('videos',this)">🎬 الفيديوهات</button>
-    <button onclick="showTab('content',this)">📝 المحتوى</button>
-    <button onclick="showTab('users',this)">👥 المستخدمون</button>
+    <button class="active" onclick="showTab('stats',this)">الإحصائيات</button>
+    <button onclick="showTab('videos',this)">الفيديوهات</button>
+    <button onclick="showTab('content',this)">المحتوى</button>
+    <button onclick="showTab('users',this)">المستخدمون</button>
   </div>
-  <div class="panel active" id="tab-stats"><div class="stats-grid" id="statsGrid"></div></div>
+
+  <div class="panel active" id="tab-stats">
+    <div class="stats-grid" id="statsGrid"></div>
+  </div>
+
   <div class="panel" id="tab-videos">
-    <div class="add-bar"><button class="btn btn-primary" onclick="openVideoModal()">+ إضافة فيديو</button></div>
-    <div class="card"><table><thead><tr><th>الصورة</th><th>العنوان</th><th>التصنيف</th><th>المدة</th><th>إجراء</th></tr></thead><tbody id="videosBody"></tbody></table></div>
+    <div class="card">
+      <div class="card-header">
+        <h2>قائمة الفيديوهات</h2>
+        <button class="btn btn-primary" onclick="openVideoModal()">إضافة فيديو</button>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>الصورة</th><th>العنوان</th><th>التصنيف</th><th>المدة</th><th>إجراءات</th></tr></thead><tbody id="videosBody"></tbody></table>
+      </div>
+    </div>
   </div>
+
   <div class="panel" id="tab-content">
-    <div class="add-bar"><button class="btn btn-primary" onclick="openContentModal()">+ إضافة محتوى</button></div>
-    <div class="card"><table><thead><tr><th>العنوان</th><th>النوع</th><th>التصنيف</th><th>منشور</th><th>إجراء</th></tr></thead><tbody id="contentBody"></tbody></table></div>
+    <div class="card">
+      <div class="card-header">
+        <h2>قائمة المحتوى</h2>
+        <button class="btn btn-primary" onclick="openContentModal()">إضافة محتوى</button>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>العنوان</th><th>النوع</th><th>التصنيف</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody id="contentBody"></tbody></table>
+      </div>
+    </div>
   </div>
+
   <div class="panel" id="tab-users">
-    <div class="card"><table><thead><tr><th>الاسم</th><th>البريد</th><th>الدور</th><th>إجراء</th></tr></thead><tbody id="usersBody"></tbody></table></div>
+    <div class="card">
+      <div class="card-header">
+        <h2>قائمة المستخدمين</h2>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>الاسم</th><th>البريد</th><th>الدور</th><th>إجراءات</th></tr></thead><tbody id="usersBody"></tbody></table>
+      </div>
+    </div>
   </div>
 </div>
 
-<div class="modal-overlay" id="videoModal"><div class="modal">
-  <h2 id="videoModalTitle">إضافة فيديو</h2>
-  <input type="hidden" id="videoId">
-  <label>العنوان</label><input id="vTitle">
-  <label>الوصف</label><textarea id="vDesc"></textarea>
-  <label>رابط الفيديو (YouTube / خارجي)</label><input id="vUrl" dir="ltr" placeholder="https://youtube.com/watch?v=...">
-  <div style="text-align:center;color:var(--muted);margin:-0.5rem 0 0.5rem">— أو —</div>
-  <label>رفع ملف فيديو</label>
-  <input type="file" id="vFile" accept="video/*" onchange="uploadVideoFile(this)" style="margin-bottom:.5rem">
-  <div id="vUploadStatus" style="font-size:.85rem;color:var(--muted);margin-bottom:.5rem;display:none"></div>
-  <label>الصورة المصغرة</label>
-  <input id="vThumb" dir="ltr" placeholder="رابط أو ارفع صورة أدناه">
-  <div class="upload-area" onclick="document.getElementById('vThumbFile').click()">
-    <span>📷 اضغط لرفع صورة مصغرة</span>
-    <input type="file" id="vThumbFile" accept="image/*" onchange="uploadThumbFile(this)">
-    <div id="vThumbPreview"></div>
+<!-- Video Modal -->
+<div class="modal-overlay" id="videoModal">
+<div class="modal">
+  <div class="modal-head">
+    <h2 id="videoModalTitle">إضافة فيديو</h2>
+    <button class="close-btn" onclick="closeModal('videoModal')">&times;</button>
   </div>
-  <div id="vThumbUploadStatus" style="font-size:.85rem;color:var(--muted);margin-bottom:.5rem;display:none"></div>
-  <label>التصنيف</label>
-  <select id="vCat">
-    <option value="cv">كتابة السيرة الذاتية</option>
-    <option value="interview">التحضير للمقابلة</option>
-    <option value="skills">المهارات المطلوبة</option>
-    <option value="softskills">المهارات الشخصية</option>
-    <option value="opportunities">البحث عن الفرص</option>
-    <option value="entrepreneurship">ريادة الأعمال</option>
-  </select>
-  <label>المدة (ثواني)</label><input id="vDur" type="number" value="0">
-  <label>الترتيب</label><input id="vOrder" type="number" value="0">
-  <div class="modal-actions">
+  <div class="modal-body">
+    <input type="hidden" id="videoId">
+    <div class="form-group"><label>العنوان</label><input id="vTitle" placeholder="عنوان الفيديو"></div>
+    <div class="form-group"><label>الوصف</label><textarea id="vDesc" placeholder="وصف مختصر للفيديو"></textarea></div>
+    <div class="form-group"><label>رابط الفيديو (YouTube أو رابط خارجي)</label><input id="vUrl" dir="ltr" placeholder="https://youtube.com/watch?v=..."></div>
+    <div class="form-divider">أو ارفع ملفاً</div>
+    <div class="form-group">
+      <label>رفع ملف فيديو / ملف مضغوط</label>
+      <input type="file" id="vFile" accept="video/*,.zip,.tar,.gz,.rar,.7z" onchange="uploadVideoFile(this)" style="padding:.4rem">
+      <div class="progress-bar" id="vProgressBar"><div class="fill" id="vProgressFill"></div></div>
+      <div class="upload-status" id="vUploadStatus"></div>
+    </div>
+    <div class="form-group">
+      <label>الصورة المصغرة</label>
+      <input id="vThumb" dir="ltr" placeholder="رابط الصورة أو ارفع أدناه">
+      <div class="upload-zone" onclick="document.getElementById('vThumbFile').click()">
+        <span>اضغط لرفع صورة مصغرة</span>
+        <input type="file" id="vThumbFile" accept="image/*" onchange="uploadThumbFile(this)">
+        <div id="vThumbPreview"></div>
+      </div>
+      <div class="upload-status" id="vThumbUploadStatus"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>التصنيف</label>
+        <select id="vCat">
+          <option value="cv">كتابة السيرة الذاتية</option>
+          <option value="interview">التحضير للمقابلة</option>
+          <option value="skills">المهارات المطلوبة</option>
+          <option value="softskills">المهارات الشخصية</option>
+          <option value="opportunities">البحث عن الفرص</option>
+          <option value="entrepreneurship">ريادة الأعمال</option>
+        </select>
+      </div>
+      <div class="form-group"><label>المدة (ثواني)</label><input id="vDur" type="number" value="0"></div>
+    </div>
+    <div class="form-group"><label>الترتيب</label><input id="vOrder" type="number" value="0"></div>
+  </div>
+  <div class="modal-footer">
     <button class="btn" onclick="closeModal('videoModal')">إلغاء</button>
-    <button class="btn btn-primary" onclick="saveVideo()">حفظ</button>
+    <button class="btn btn-primary" id="videoSaveBtn" onclick="saveVideo()">حفظ</button>
   </div>
-</div></div>
+</div>
+</div>
 
-<div class="modal-overlay" id="contentModal"><div class="modal">
-  <h2 id="contentModalTitle">إضافة محتوى</h2>
-  <input type="hidden" id="contentId">
-  <label>العنوان</label><input id="cTitle">
-  <label>النوع</label>
-  <select id="cType"><option value="article">مقال</option><option value="document">مستند</option><option value="guide">دليل</option></select>
-  <label>التصنيف</label><input id="cCategory">
-  <label>المحتوى / النص</label><textarea id="cBody" rows="6"></textarea>
-  <label>رابط الملف (اختياري)</label><input id="cFileUrl" dir="ltr">
-  <label>رابط الصورة (اختياري)</label><input id="cImageUrl" dir="ltr">
-  <label>منشور</label>
-  <select id="cPublished"><option value="true">نعم</option><option value="false">لا</option></select>
-  <label>الترتيب</label><input id="cOrder" type="number" value="0">
-  <div class="modal-actions">
+<!-- Content Modal -->
+<div class="modal-overlay" id="contentModal">
+<div class="modal">
+  <div class="modal-head">
+    <h2 id="contentModalTitle">إضافة محتوى</h2>
+    <button class="close-btn" onclick="closeModal('contentModal')">&times;</button>
+  </div>
+  <div class="modal-body">
+    <input type="hidden" id="contentId">
+    <div class="form-group"><label>العنوان</label><input id="cTitle" placeholder="عنوان المحتوى"></div>
+    <div class="form-row">
+      <div class="form-group"><label>النوع</label>
+        <select id="cType"><option value="article">مقال</option><option value="document">مستند</option><option value="guide">دليل</option></select>
+      </div>
+      <div class="form-group"><label>التصنيف</label><input id="cCategory" placeholder="مثال: مهارات"></div>
+    </div>
+    <div class="form-group"><label>المحتوى / النص</label><textarea id="cBody" rows="6" placeholder="اكتب المحتوى هنا..."></textarea></div>
+    <div class="form-row">
+      <div class="form-group"><label>رابط الملف (اختياري)</label><input id="cFileUrl" dir="ltr" placeholder="https://..."></div>
+      <div class="form-group"><label>رابط الصورة (اختياري)</label><input id="cImageUrl" dir="ltr" placeholder="https://..."></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>منشور</label>
+        <select id="cPublished"><option value="true">نعم</option><option value="false">لا</option></select>
+      </div>
+      <div class="form-group"><label>الترتيب</label><input id="cOrder" type="number" value="0"></div>
+    </div>
+  </div>
+  <div class="modal-footer">
     <button class="btn" onclick="closeModal('contentModal')">إلغاء</button>
     <button class="btn btn-primary" onclick="saveContent()">حفظ</button>
   </div>
-</div></div>
+</div>
+</div>
 
 <script>
 const API=location.origin+'/api';
 let token=localStorage.getItem('admin_token')||'';
+const CHUNK_SIZE=4*1024*1024;
 function headers(){return{'Content-Type':'application/json','Authorization':'Bearer '+token}}
 
 async function api(method,path,body){
@@ -226,7 +377,9 @@ async function loadStats(){
     const grid=document.getElementById('statsGrid');
     grid.innerHTML='';
     const f=s.features||{};
-    [{num:s.totalUsers||0,lbl:'المستخدمون',icon:'👥'},{num:f.questionnaires||0,lbl:'الاستبيانات',icon:'📋'},{num:f.cvs||0,lbl:'السير الذاتية',icon:'📄'},{num:f.interviews||0,lbl:'المقابلات',icon:'🎤'},{num:f.businessPlans||0,lbl:'خطط العمل',icon:'💡'},{num:f.pitches||0,lbl:'العروض',icon:'🎯'}].forEach(i=>{grid.innerHTML+='<div class="stat-card"><div class="icon">'+i.icon+'</div><div class="num">'+i.num+'</div><div class="lbl">'+i.lbl+'</div></div>';});
+    [{num:s.totalUsers||0,lbl:'المستخدمون'},{num:f.questionnaires||0,lbl:'الاستبيانات'},{num:f.cvs||0,lbl:'السير الذاتية'},{num:f.interviews||0,lbl:'المقابلات'},{num:f.businessPlans||0,lbl:'خطط العمل'},{num:f.pitches||0,lbl:'العروض'}].forEach(i=>{
+      grid.innerHTML+='<div class="stat-card"><div class="label">'+i.lbl+'</div><div class="value">'+i.num+'</div></div>';
+    });
   }catch(e){console.error(e);}
 }
 
@@ -236,7 +389,7 @@ async function loadVideos(){
   try{
     videosList=await api('GET','/admin/videos');
     const tb=document.getElementById('videosBody');
-    tb.innerHTML=videosList.map(v=>'<tr><td class="thumb-cell">'+(v.thumbnailUrl?'<img src="'+esc(v.thumbnailUrl)+'" alt="">':'<div class="no-img">🎬</div>')+'</td><td>'+esc(v.title)+'</td><td>'+(catMap[v.category]||esc(v.category))+'</td><td>'+(v.durationSeconds||0)+'ث</td><td><button class="btn btn-primary" onclick="editVideo(\''+v.id+'\')">تعديل</button> <button class="btn btn-danger" onclick="deleteVideo(\''+v.id+'\')">حذف</button></td></tr>').join('');
+    tb.innerHTML=videosList.map(v=>'<tr><td class="thumb-cell">'+(v.thumbnailUrl?'<img src="'+esc(v.thumbnailUrl)+'" alt="">':'<div class="no-img">--</div>')+'</td><td>'+esc(v.title)+'</td><td>'+(catMap[v.category]||esc(v.category))+'</td><td>'+(v.durationSeconds||0)+'ث</td><td class="actions"><button class="btn btn-sm btn-primary" onclick="editVideo(\''+v.id+'\')">تعديل</button><button class="btn btn-sm btn-danger" onclick="deleteVideo(\''+v.id+'\')">حذف</button></td></tr>').join('');
   }catch(e){console.error(e);}
 }
 function openVideoModal(v){
@@ -249,8 +402,9 @@ function openVideoModal(v){
   document.getElementById('vCat').value=v?v.category:'cv';
   document.getElementById('vDur').value=v?(v.durationSeconds||0):0;
   document.getElementById('vOrder').value=v?(v.order||0):0;
-  document.getElementById('vUploadStatus').style.display='none';
-  document.getElementById('vThumbUploadStatus').style.display='none';
+  setUploadStatus('vUploadStatus','','');
+  setUploadStatus('vThumbUploadStatus','','');
+  document.getElementById('vProgressBar').classList.remove('show');
   document.getElementById('vThumbPreview').innerHTML=v&&v.thumbnailUrl?'<img class="preview" src="'+esc(v.thumbnailUrl)+'">':'';
   document.getElementById('videoModal').classList.add('open');
 }
@@ -263,16 +417,16 @@ async function deleteVideo(id){
   finally{hideLoading();}
 }
 async function saveVideo(){
-  if(_videoUploading){showToast('انتظر حتى ينتهي رفع الفيديو...','error');return;}
+  if(_videoUploading){showToast('انتظر حتى ينتهي رفع الملف','error');return;}
   const id=document.getElementById('videoId').value;
   const title=document.getElementById('vTitle').value.trim();
   const videoUrl=document.getElementById('vUrl').value.trim();
   if(!title){showToast('يجب إدخال عنوان الفيديو','error');return;}
-  if(!videoUrl){showToast('يجب إدخال رابط الفيديو أو رفع ملف فيديو (انتظر حتى ينتهي الرفع)','error');return;}
+  if(!videoUrl){showToast('يجب إدخال رابط أو رفع ملف','error');return;}
   const body={title:title,description:document.getElementById('vDesc').value||'',videoUrl:videoUrl,category:document.getElementById('vCat').value,durationSeconds:parseInt(document.getElementById('vDur').value)||0,order:parseInt(document.getElementById('vOrder').value)||0};
   const thumb=document.getElementById('vThumb').value.trim();
   if(thumb) body.thumbnailUrl=thumb;
-  showLoading(id?'جاري تحديث الفيديو...':'جاري إضافة الفيديو...');
+  showLoading(id?'جاري التحديث...':'جاري الإضافة...');
   try{
     if(id) await api('PUT','/admin/videos/'+id,body);
     else await api('POST','/admin/videos',body);
@@ -288,7 +442,7 @@ async function loadContent(){
     contentList=await api('GET','/admin/content');
     const tb=document.getElementById('contentBody');
     const typeMap={article:'مقال',document:'مستند',guide:'دليل'};
-    tb.innerHTML=contentList.map(c=>'<tr><td>'+esc(c.title)+'</td><td>'+(typeMap[c.type]||c.type)+'</td><td>'+esc(c.category||'-')+'</td><td>'+(c.published?'✅':'❌')+'</td><td><button class="btn btn-primary" onclick="editContent(\''+c.id+'\')">تعديل</button> <button class="btn btn-danger" onclick="deleteContent(\''+c.id+'\')">حذف</button></td></tr>').join('');
+    tb.innerHTML=contentList.map(c=>'<tr><td>'+esc(c.title)+'</td><td>'+(typeMap[c.type]||c.type)+'</td><td>'+esc(c.category||'-')+'</td><td>'+(c.published?'<span class="badge badge-yes">منشور</span>':'<span class="badge badge-no">مسودة</span>')+'</td><td class="actions"><button class="btn btn-sm btn-primary" onclick="editContent(\''+c.id+'\')">تعديل</button><button class="btn btn-sm btn-danger" onclick="deleteContent(\''+c.id+'\')">حذف</button></td></tr>').join('');
   }catch(e){console.error(e);}
 }
 function openContentModal(c){
@@ -307,7 +461,7 @@ function openContentModal(c){
 function editContent(id){const c=contentList.find(x=>x.id===id);if(c)openContentModal(c);}
 async function deleteContent(id){
   if(!confirm('هل أنت متأكد من حذف هذا المحتوى؟'))return;
-  showLoading('جاري حذف المحتوى...');
+  showLoading('جاري الحذف...');
   try{await api('DELETE','/admin/content/'+id);await loadContent();showToast('تم حذف المحتوى','success');}
   catch(e){showToast('فشل الحذف: '+e.message,'error');}
   finally{hideLoading();}
@@ -325,7 +479,7 @@ async function saveContent(){
   if(bd) body.body=bd;
   if(fu) body.fileUrl=fu;
   if(iu) body.imageUrl=iu;
-  showLoading(id?'جاري تحديث المحتوى...':'جاري إضافة المحتوى...');
+  showLoading(id?'جاري التحديث...':'جاري الإضافة...');
   try{
     if(id) await api('PUT','/admin/content/'+id,body);
     else await api('POST','/admin/content',body);
@@ -339,7 +493,7 @@ async function loadUsers(){
   try{
     const users=await api('GET','/admin/users');
     const tb=document.getElementById('usersBody');
-    tb.innerHTML=users.map(u=>'<tr><td>'+esc(u.firstName||u.first_name||'')+' '+esc(u.lastName||u.last_name||'')+'</td><td>'+esc(u.email)+'</td><td><span style="color:'+(u.role==='admin'?'var(--primary)':'var(--muted)')+';font-weight:600">'+(u.role==='admin'?'مدير':'مستخدم')+'</span></td><td><button class="btn btn-primary" onclick="toggleRole(\''+u.id+'\',\''+u.role+'\')">'+(u.role==='admin'?'جعله مستخدم':'جعله مدير')+'</button></td></tr>').join('');
+    tb.innerHTML=users.map(u=>'<tr><td>'+esc(u.firstName||u.first_name||'')+' '+esc(u.lastName||u.last_name||'')+'</td><td>'+esc(u.email)+'</td><td><span class="badge '+(u.role==='admin'?'badge-admin':'badge-user')+'">'+(u.role==='admin'?'مدير':'مستخدم')+'</span></td><td><button class="btn btn-sm btn-primary" onclick="toggleRole(\''+u.id+'\',\''+u.role+'\')">'+(u.role==='admin'?'جعله مستخدم':'جعله مدير')+'</button></td></tr>').join('');
   }catch(e){console.error(e);}
 }
 async function toggleRole(id,current){
@@ -351,46 +505,101 @@ async function toggleRole(id,current){
   finally{hideLoading();}
 }
 
+function setUploadStatus(elId,cls,text){
+  const el=document.getElementById(elId);
+  el.className='upload-status'+(cls?' '+cls:'');
+  el.textContent=text;
+}
+
 let _videoUploading=false;
-async function uploadVideoFile(input){
-  const file=input.files[0];if(!file)return;
-  const sizeMB=Math.round(file.size/1024/1024);
-  const status=document.getElementById('vUploadStatus');
-  status.style.display='block';
-  if(sizeMB>25){
-    status.style.color='var(--danger)';
-    status.textContent='⚠️ الملف كبير ('+sizeMB+'MB). استخدم رابط YouTube بدلاً من رفع الملف — الخادم لا يدعم رفع ملفات أكبر من 25MB';
-    input.value='';
-    return;
-  }
-  const saveBtn=document.querySelector('#videoModal .btn-primary');
-  status.style.color='var(--primary)';
-  status.textContent='جاري الرفع... 0% ('+sizeMB+'MB)';
-  _videoUploading=true;
-  if(saveBtn){saveBtn.style.opacity='0.5';saveBtn.textContent='⏳ جاري الرفع...';}
-  try{
-    const form=new FormData();form.append('file',file);
-    const data=await new Promise((resolve,reject)=>{
+
+async function chunkedUpload(file,onProgress){
+  const totalChunks=Math.ceil(file.size/CHUNK_SIZE);
+  const uploadId=crypto.randomUUID();
+  for(let i=0;i<totalChunks;i++){
+    const start=i*CHUNK_SIZE;
+    const end=Math.min(start+CHUNK_SIZE,file.size);
+    const chunk=file.slice(start,end);
+    const form=new FormData();
+    form.append('chunk',chunk);
+    await new Promise((resolve,reject)=>{
       const xhr=new XMLHttpRequest();
-      xhr.open('POST',API+'/admin/upload');
+      xhr.open('POST',API+'/admin/upload/chunk');
       xhr.setRequestHeader('Authorization','Bearer '+token);
-      xhr.upload.onprogress=function(e){if(e.lengthComputable){const pct=Math.round(e.loaded/e.total*100);status.textContent='جاري الرفع... '+pct+'% ('+sizeMB+'MB)';}};
-      xhr.onload=function(){if(xhr.status>=200&&xhr.status<300){resolve(JSON.parse(xhr.responseText));}else{reject(new Error(xhr.responseText||'فشل الرفع'));}};
-      xhr.onerror=function(){reject(new Error('خطأ في الاتصال — الملف قد يكون كبير جداً'));};
-      xhr.ontimeout=function(){reject(new Error('انتهت المهلة — استخدم رابط YouTube'));};
-      xhr.timeout=35000;
+      xhr.setRequestHeader('x-upload-id',uploadId);
+      xhr.setRequestHeader('x-chunk-index',String(i));
+      xhr.onload=function(){
+        if(xhr.status>=200&&xhr.status<300){resolve();}
+        else{reject(new Error('فشل رفع الجزء '+(i+1)));}
+      };
+      xhr.onerror=function(){reject(new Error('خطأ في الاتصال'));};
+      xhr.ontimeout=function(){reject(new Error('انتهت المهلة'));};
+      xhr.timeout=25000;
       xhr.send(form);
     });
+    if(onProgress) onProgress(i+1,totalChunks);
+  }
+  const mergeRes=await fetch(API+'/admin/upload/merge',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+    body:JSON.stringify({uploadId:uploadId,filename:file.name,totalChunks:totalChunks})
+  });
+  if(!mergeRes.ok) throw new Error('فشل تجميع الملف');
+  return await mergeRes.json();
+}
+
+async function uploadVideoFile(input){
+  const file=input.files[0];if(!file)return;
+  const sizeMB=(file.size/(1024*1024)).toFixed(1);
+  const bar=document.getElementById('vProgressBar');
+  const fill=document.getElementById('vProgressFill');
+  const saveBtn=document.getElementById('videoSaveBtn');
+  _videoUploading=true;
+  saveBtn.disabled=true;saveBtn.style.opacity='.5';saveBtn.textContent='جاري الرفع...';
+  bar.classList.add('show');fill.style.width='0%';
+  setUploadStatus('vUploadStatus','info','جاري الرفع... 0% ('+sizeMB+' MB)');
+  try{
+    let data;
+    if(file.size<=20*1024*1024){
+      const form=new FormData();form.append('file',file);
+      data=await new Promise((resolve,reject)=>{
+        const xhr=new XMLHttpRequest();
+        xhr.open('POST',API+'/admin/upload');
+        xhr.setRequestHeader('Authorization','Bearer '+token);
+        xhr.upload.onprogress=function(e){
+          if(e.lengthComputable){
+            const pct=Math.round(e.loaded/e.total*100);
+            fill.style.width=pct+'%';
+            setUploadStatus('vUploadStatus','info','جاري الرفع... '+pct+'% ('+sizeMB+' MB)');
+          }
+        };
+        xhr.onload=function(){if(xhr.status>=200&&xhr.status<300){resolve(JSON.parse(xhr.responseText));}else{reject(new Error('فشل الرفع'));}};
+        xhr.onerror=function(){reject(new Error('خطأ في الاتصال'));};
+        xhr.ontimeout=function(){reject(new Error('انتهت المهلة'));};
+        xhr.timeout=28000;
+        xhr.send(form);
+      });
+    } else {
+      data=await chunkedUpload(file,function(done,total){
+        const pct=Math.round(done/total*100);
+        fill.style.width=pct+'%';
+        setUploadStatus('vUploadStatus','info','جاري الرفع... '+pct+'% — الجزء '+done+'/'+total+' ('+sizeMB+' MB)');
+      });
+    }
     document.getElementById('vUrl').value=location.origin+data.url;
-    status.style.color='var(--success)';status.textContent='✅ تم رفع الفيديو بنجاح';
-  }catch(e){status.style.color='var(--danger)';status.textContent='❌ '+e.message+' — ارفع الفيديو على YouTube والصق الرابط';}
-  finally{_videoUploading=false;if(saveBtn){saveBtn.style.opacity='1';saveBtn.textContent='حفظ';}}
+    fill.style.width='100%';
+    setUploadStatus('vUploadStatus','ok','تم رفع الملف بنجاح ('+sizeMB+' MB)');
+  }catch(e){
+    setUploadStatus('vUploadStatus','err',e.message);
+    fill.style.width='0%';
+  }finally{
+    _videoUploading=false;
+    saveBtn.disabled=false;saveBtn.style.opacity='1';saveBtn.textContent='حفظ';
+  }
 }
 async function uploadThumbFile(input){
   const file=input.files[0];if(!file)return;
-  const status=document.getElementById('vThumbUploadStatus');
-  status.style.display='block';status.style.color='var(--primary)';
-  status.textContent='جاري رفع الصورة...';
+  setUploadStatus('vThumbUploadStatus','info','جاري رفع الصورة...');
   try{
     const form=new FormData();form.append('file',file);
     const r=await fetch(API+'/admin/upload',{method:'POST',headers:{'Authorization':'Bearer '+token},body:form});
@@ -399,8 +608,8 @@ async function uploadThumbFile(input){
     const fullUrl=location.origin+data.url;
     document.getElementById('vThumb').value=fullUrl;
     document.getElementById('vThumbPreview').innerHTML='<img class="preview" src="'+fullUrl+'">';
-    status.style.color='var(--success)';status.textContent='✅ تم رفع الصورة';
-  }catch(e){status.style.color='var(--danger)';status.textContent='❌ فشل الرفع: '+e.message;}
+    setUploadStatus('vThumbUploadStatus','ok','تم رفع الصورة');
+  }catch(e){setUploadStatus('vThumbUploadStatus','err','فشل الرفع: '+e.message);}
 }
 
 function closeModal(id){document.getElementById(id).classList.remove('open');}
