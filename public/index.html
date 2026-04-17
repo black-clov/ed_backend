@@ -354,10 +354,18 @@ async function toggleRole(id,current){
 let _videoUploading=false;
 async function uploadVideoFile(input){
   const file=input.files[0];if(!file)return;
+  const sizeMB=Math.round(file.size/1024/1024);
   const status=document.getElementById('vUploadStatus');
+  status.style.display='block';
+  if(sizeMB>25){
+    status.style.color='var(--danger)';
+    status.textContent='⚠️ الملف كبير ('+sizeMB+'MB). استخدم رابط YouTube بدلاً من رفع الملف — الخادم لا يدعم رفع ملفات أكبر من 25MB';
+    input.value='';
+    return;
+  }
   const saveBtn=document.querySelector('#videoModal .btn-primary');
-  status.style.display='block';status.style.color='var(--primary)';
-  status.textContent='جاري الرفع... 0% ('+Math.round(file.size/1024/1024)+'MB)';
+  status.style.color='var(--primary)';
+  status.textContent='جاري الرفع... 0% ('+sizeMB+'MB)';
   _videoUploading=true;
   if(saveBtn){saveBtn.style.opacity='0.5';saveBtn.textContent='⏳ جاري الرفع...';}
   try{
@@ -366,16 +374,16 @@ async function uploadVideoFile(input){
       const xhr=new XMLHttpRequest();
       xhr.open('POST',API+'/admin/upload');
       xhr.setRequestHeader('Authorization','Bearer '+token);
-      xhr.upload.onprogress=function(e){if(e.lengthComputable){const pct=Math.round(e.loaded/e.total*100);status.textContent='جاري الرفع... '+pct+'% ('+Math.round(file.size/1024/1024)+'MB)';}};
+      xhr.upload.onprogress=function(e){if(e.lengthComputable){const pct=Math.round(e.loaded/e.total*100);status.textContent='جاري الرفع... '+pct+'% ('+sizeMB+'MB)';}};
       xhr.onload=function(){if(xhr.status>=200&&xhr.status<300){resolve(JSON.parse(xhr.responseText));}else{reject(new Error(xhr.responseText||'فشل الرفع'));}};
-      xhr.onerror=function(){reject(new Error('خطأ في الاتصال'));};
-      xhr.ontimeout=function(){reject(new Error('انتهت المهلة'));};
-      xhr.timeout=600000;
+      xhr.onerror=function(){reject(new Error('خطأ في الاتصال — الملف قد يكون كبير جداً'));};
+      xhr.ontimeout=function(){reject(new Error('انتهت المهلة — استخدم رابط YouTube'));};
+      xhr.timeout=35000;
       xhr.send(form);
     });
     document.getElementById('vUrl').value=location.origin+data.url;
     status.style.color='var(--success)';status.textContent='✅ تم رفع الفيديو بنجاح';
-  }catch(e){status.style.color='var(--danger)';status.textContent='❌ فشل الرفع: '+e.message;}
+  }catch(e){status.style.color='var(--danger)';status.textContent='❌ '+e.message+' — ارفع الفيديو على YouTube والصق الرابط';}
   finally{_videoUploading=false;if(saveBtn){saveBtn.style.opacity='1';saveBtn.textContent='حفظ';}}
 }
 async function uploadThumbFile(input){
