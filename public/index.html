@@ -226,6 +226,22 @@ tr:hover td{background:#fafbfc}
   </div>
 </div>
 
+<!-- User Details Modal -->
+<div class="modal-overlay" id="userDetailsModal">
+<div class="modal" style="width:680px">
+  <div class="modal-head">
+    <h2 id="userDetailsTitle">تفاصيل المستخدم</h2>
+    <button class="close-btn" onclick="closeModal('userDetailsModal')">&times;</button>
+  </div>
+  <div class="modal-body" style="max-height:70vh;overflow-y:auto">
+    <div id="userDetailsContent" style="font-size:.875rem">جاري التحميل...</div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn" onclick="closeModal('userDetailsModal')">إغلاق</button>
+  </div>
+</div>
+</div>
+
 <!-- Video Modal -->
 <div class="modal-overlay" id="videoModal">
 <div class="modal">
@@ -493,7 +509,7 @@ async function loadUsers(){
   try{
     const users=await api('GET','/admin/users');
     const tb=document.getElementById('usersBody');
-    tb.innerHTML=users.map(u=>'<tr><td>'+esc(u.firstName||u.first_name||'')+' '+esc(u.lastName||u.last_name||'')+'</td><td>'+esc(u.email)+'</td><td><span class="badge '+(u.role==='admin'?'badge-admin':'badge-user')+'">'+(u.role==='admin'?'مدير':'مستخدم')+'</span></td><td><button class="btn btn-sm btn-primary" onclick="toggleRole(\''+u.id+'\',\''+u.role+'\')">'+(u.role==='admin'?'جعله مستخدم':'جعله مدير')+'</button></td></tr>').join('');
+    tb.innerHTML=users.map(u=>'<tr><td>'+esc(u.firstName||u.first_name||'')+' '+esc(u.lastName||u.last_name||'')+'</td><td>'+esc(u.email)+'</td><td><span class="badge '+(u.role==='admin'?'badge-admin':'badge-user')+'">'+(u.role==='admin'?'مدير':'مستخدم')+'</span></td><td class="actions"><button class="btn btn-sm btn-primary" onclick="viewUserDetails(\''+u.id+'\')">&nbsp;تفاصيل&nbsp;</button><button class="btn btn-sm" onclick="toggleRole(\''+u.id+'\',\''+u.role+'\')">'+(u.role==='admin'?'جعله مستخدم':'جعله مدير')+'</button><button class="btn btn-sm btn-danger" onclick="deleteUser(\''+u.id+'\',\''+esc(u.email)+'\')">&nbsp;حذف&nbsp;</button></td></tr>').join('');
   }catch(e){console.error(e);}
 }
 async function toggleRole(id,current){
@@ -503,6 +519,55 @@ async function toggleRole(id,current){
   try{await api('PATCH','/admin/users/'+id+'/role',{role:newRole});await loadUsers();showToast('تم تغيير الدور','success');}
   catch(e){showToast('فشل التغيير: '+e.message,'error');}
   finally{hideLoading();}
+}
+async function deleteUser(id,email){
+  if(!confirm('هل أنت متأكد من حذف '+email+'؟\nسيتم حذف جميع بياناته نهائياً.'))return;
+  showLoading('جاري حذف المستخدم...');
+  try{await api('DELETE','/admin/users/'+id);await loadUsers();showToast('تم حذف المستخدم','success');}
+  catch(e){showToast('فشل الحذف: '+e.message,'error');}
+  finally{hideLoading();}
+}
+const secLabels={questionnaire:'الاستبيان',cv:'السيرة الذاتية',interviews:'المقابلات',businessPlan:'خطة العمل',pitch:'العرض التقديمي',barriers:'العوائق',entBarriers:'عوائق المقاولة',needs:'الاحتياجات',sectors:'القطاعات',skills:'المهارات',commTraining:'التدريب على التواصل',entSkills:'مهارات المقاولة',support:'الدعم',recommendation:'التوصيات',mentorConnections:'ارتباطات الموجهين'};
+const fieldLabels={interests:'الاهتمامات',interestCategories:'فئات الاهتمام',personalityAnswers:'إجابات الشخصية',softSkillsAnswers:'المهارات الناعمة',workPreferences:'تفضيلات العمل',targetRole:'الدور المستهدف',answers:'الإجابات',feedback:'الملاحظات',score:'النتيجة',status:'الحالة',createdAt:'تاريخ الإنشاء',projectName:'اسم المشروع',description:'الوصف',valueProposition:'عرض القيمة',targetCustomers:'العملاء المستهدفون',costs:'التكاليف',firstSteps:'الخطوات الأولى',sector:'القطاع',pitchText:'نص العرض',barriers:'العوائق',needs:'الاحتياجات',sectors:'القطاعات',skills:'المهارات',ratings:'التقييمات',completedModules:'الوحدات المكتملة',preferences:'التفضيلات',details:'التفاصيل',suggestedTraining:'التكوين المقترح',suggestedJobs:'الوظائف المقترحة',suggestedInternships:'التدريبات المقترحة',notes:'ملاحظات',interest_categories:'فئات الاهتمام',personality_answers:'إجابات الشخصية',soft_skills_answers:'المهارات الناعمة',work_preferences:'تفضيلات العمل',target_role:'الدور المستهدف',project_name:'اسم المشروع',value_proposition:'عرض القيمة',target_customers:'العملاء المستهدفون',first_steps:'الخطوات الأولى',pitch_text:'نص العرض',created_at:'تاريخ الإنشاء',scheduled_at:'الموعد',completed_modules:'الوحدات المكتملة',suggested_training:'التكوين المقترح',suggested_jobs:'الوظائف المقترحة',suggested_internships:'التدريبات المقترحة'};
+function renderVal(v){
+  if(v===null||v===undefined)return'<span style="color:#999">-</span>';
+  if(Array.isArray(v))return v.length?v.map(i=>typeof i==='object'?'<pre style="background:#f8f9fa;padding:.5rem;border-radius:4px;font-size:.8rem;overflow-x:auto">'+esc(JSON.stringify(i,null,2))+'</pre>':esc(String(i))).join('، '):'<span style="color:#999">فارغ</span>';
+  if(typeof v==='object')return'<pre style="background:#f8f9fa;padding:.5rem;border-radius:4px;font-size:.8rem;overflow-x:auto">'+esc(JSON.stringify(v,null,2))+'</pre>';
+  return esc(String(v));
+}
+function renderSection(key,data){
+  const label=secLabels[key]||key;
+  let html='<div style="margin-bottom:1rem"><h3 style="font-size:.9rem;font-weight:600;color:var(--primary);margin-bottom:.4rem;border-bottom:1px solid var(--border);padding-bottom:.25rem">'+label+'</h3>';
+  if(data===null||data===undefined||(Array.isArray(data)&&data.length===0)){html+='<span style="color:#999;font-size:.8rem">لا توجد بيانات</span>';}
+  else if(Array.isArray(data)&&typeof data[0]==='string'){html+='<div style="display:flex;flex-wrap:wrap;gap:.3rem">'+data.map(s=>'<span style="background:var(--primary-light);color:var(--primary);padding:.15rem .5rem;border-radius:10px;font-size:.8rem">'+esc(s)+'</span>').join('')+'</div>';}
+  else if(Array.isArray(data)){data.forEach((item,i)=>{html+='<div style="background:#f8f9fa;border-radius:6px;padding:.6rem;margin-bottom:.4rem">';if(typeof item==='object'){Object.entries(item).forEach(([k,v])=>{if(k==='id'||k==='userId'||k==='user_id')return;html+='<div style="margin-bottom:.2rem"><strong style="font-size:.8rem">'+(fieldLabels[k]||k)+':</strong> '+renderVal(v)+'</div>';});}else{html+=esc(String(item));}html+='</div>';});}
+  else if(typeof data==='object'){Object.entries(data).forEach(([k,v])=>{if(k==='id'||k==='userId'||k==='user_id')return;html+='<div style="margin-bottom:.2rem"><strong style="font-size:.8rem">'+(fieldLabels[k]||k)+':</strong> '+renderVal(v)+'</div>';});}
+  else{html+=renderVal(data);}
+  html+='</div>';return html;
+}
+async function viewUserDetails(id){
+  document.getElementById('userDetailsContent').innerHTML='<div style="text-align:center;padding:2rem;color:#999">جاري التحميل...</div>';
+  document.getElementById('userDetailsModal').classList.add('open');
+  try{
+    const d=await api('GET','/admin/users/'+id+'/details');
+    const u=d.user||{};
+    const sec=d.sections||{};
+    let html='<div style="background:var(--primary-light);padding:.75rem 1rem;border-radius:8px;margin-bottom:1rem">';
+    html+='<div style="font-weight:600;font-size:1rem">'+(esc(u.first_name||u.firstName||'')+' '+esc(u.last_name||u.lastName||'')).trim()+'</div>';
+    html+='<div style="font-size:.85rem;color:var(--text-secondary)">'+esc(u.email||'')+'</div>';
+    const info=[];
+    if(u.ville)info.push('المدينة: '+esc(u.ville));
+    if(u.age)info.push('العمر: '+u.age);
+    if(u.niveau_scolaire||u.niveauScolaire)info.push('المستوى: '+esc(u.niveau_scolaire||u.niveauScolaire));
+    if(u.telephone)info.push('الهاتف: '+esc(u.telephone));
+    if(info.length)html+='<div style="font-size:.8rem;margin-top:.35rem;color:var(--text-secondary)">'+info.join(' | ')+'</div>';
+    html+='</div>';
+    Object.entries(sec).forEach(([k,v])=>{html+=renderSection(k,v);});
+    document.getElementById('userDetailsTitle').textContent='تفاصيل: '+(esc(u.first_name||u.firstName||'')+' '+esc(u.last_name||u.lastName||'')).trim();
+    document.getElementById('userDetailsContent').innerHTML=html;
+  }catch(e){
+    document.getElementById('userDetailsContent').innerHTML='<div style="color:var(--danger);text-align:center;padding:1rem">خطأ: '+esc(e.message)+'</div>';
+  }
 }
 
 function setUploadStatus(elId,cls,text){
