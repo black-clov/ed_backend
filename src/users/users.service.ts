@@ -141,6 +141,12 @@ export class UsersService {
     return { ok: true, role };
   }
 
+  async deleteUser(id: string) {
+    const result = await this.usersRepo.delete(id);
+    if (result.affected === 0) throw new NotFoundException('User not found');
+    return { ok: true };
+  }
+
   async countUsers() {
     return this.usersRepo.count();
   }

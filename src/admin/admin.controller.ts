@@ -33,6 +33,16 @@ export class AdminController {
     return this.adminService.updateUserRole(id, dto.role);
   }
 
+  @Get('users/:id/details')
+  async getUserDetails(@Param('id') id: string) {
+    return this.adminService.getUserDetails(id);
+  }
+
+  @Delete('users/:id')
+  async deleteUser(@Param('id') id: string) {
+    return this.adminService.deleteUser(id);
+  }
+
   @Get('analytics')
   async getAnalytics(@Query('limit') limit?: number) {
     return this.adminService.getAnalytics(limit || 100);
