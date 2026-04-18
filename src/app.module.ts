@@ -39,7 +39,7 @@ import { getTypeOrmConfig } from './database/typeorm.config';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 30 }]),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 30, name: 'default' }]),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),
       serveRoot: '/panel',

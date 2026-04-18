@@ -21,7 +21,7 @@ export class AuthController {
   }
 
   @Public()
-  @Throttle([{ ttl: 60000, limit: 5 }])
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   @Post('login')
   async login(@Body() dto: { email?: string; password?: string }) {
     const user = await this.authService.validateUser(dto.email || '', dto.password || '');
@@ -34,14 +34,14 @@ export class AuthController {
   }
 
   @Public()
-  @Throttle([{ ttl: 60000, limit: 3 }])
+  @Throttle({ default: { ttl: 60000, limit: 3 } })
   @Post('request-reset')
   async requestReset(@Body() dto: RequestResetDto) {
     return this.authService.requestPasswordReset(dto.email);
   }
 
   @Public()
-  @Throttle([{ ttl: 60000, limit: 5 }])
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   @Post('reset-password')
   async resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto.token, dto.newPassword);
@@ -54,7 +54,7 @@ export class AuthController {
   }
 
   @Public()
-  @Throttle([{ ttl: 60000, limit: 10 }])
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   @Post('google')
   async googleLogin(@Body() dto: { idToken: string }) {
     if (!dto.idToken) {
