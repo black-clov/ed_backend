@@ -19,10 +19,23 @@ async function bootstrap() {
     }),
   );
 
+  const allowedOrigins = [
+    'https://ed-backend-o1dv.onrender.com',
+    ...(config.get<string>('NODE_ENV') !== 'production'
+      ? ['http://localhost:3000', 'http://localhost:4200', 'http://localhost:8080']
+      : []),
+  ];
   app.enableCors({
-    origin: true,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, curl, Postman)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(null, false);
+      }
+    },
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    allowedHeaders: 'Content-Type, Authorization',
+    allowedHeaders: 'Content-Type, Authorization, x-upload-id, x-chunk-index',
     credentials: true,
   });
 
