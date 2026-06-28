@@ -49,11 +49,11 @@ export const entities = [
 ];
 
 export function getTypeOrmConfig(config: ConfigService): DataSourceOptions {
-  const nodeEnv = config.get<string>('NODE_ENV', 'development');
-  const isProduction = nodeEnv === 'production';
+  const host = config.get<string>('DB_HOST', 'localhost');
+  const needsSsl = !host.includes('localhost') && !host.includes('127.0.0.1');
   return {
     type: 'postgres',
-    host: config.get<string>('DB_HOST', 'localhost'),
+    host,
     port: config.get<number>('DB_PORT', 5432),
     username: config.get<string>('DB_USERNAME', 'postgres'),
     password: config.get<string>('DB_PASSWORD', 'postgres'),
@@ -62,7 +62,7 @@ export function getTypeOrmConfig(config: ConfigService): DataSourceOptions {
     synchronize: config.get<string>('TYPEORM_SYNC', 'false') === 'true',
     migrationsRun: false,
     migrations: [],
-    ...(isProduction && {
+    ...(needsSsl && {
       ssl: { rejectUnauthorized: false },
     }),
   };

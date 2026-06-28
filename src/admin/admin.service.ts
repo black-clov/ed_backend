@@ -69,9 +69,9 @@ export class AdminService implements OnModuleInit {
       await this.usersService.updateRole(user.id, 'admin');
       this.logger.log(`Promoted ${ADMIN_EMAIL} to admin`);
     }
-    // One-time password reset — remove after first deploy
+    // Password: Edmaj@2024
     if (user) {
-      await this.usersService.updatePassword(user.id, '$2b$10$3ZXbYlSpsyt3pnxqSzWyoOdQEK3uvP3E8.85PT2NUOmYNZqH7Ncbq');
+      await this.usersService.updatePassword(user.id, '$2b$10$lYMTiTC01ieYVWxgUFHmOut1QQYT/TLl57EnVF6opwFHf9LzcBXKS');
       this.logger.log(`Reset password for ${ADMIN_EMAIL}`);
     }
   }
