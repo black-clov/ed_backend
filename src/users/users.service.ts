@@ -1,7 +1,7 @@
 
 import { Injectable, ConflictException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserEntity } from './entities/user.entity';
@@ -15,7 +15,52 @@ export class UsersService {
   constructor(
     @InjectRepository(UserEntity)
     private readonly usersRepo: Repository<UserEntity>,
+    private readonly dataSource: DataSource,
   ) {}
+
+  /**
+   * Every table that stores rows keyed by `user_id`. Deleting an account must
+   * purge all of these so no personal data lingers (Play Store / GDPR).
+   */
+  private static readonly USER_SCOPED_TABLES = [
+    'analytics_events',
+    'barriers',
+    'business_plans',
+    'communication_trainings',
+    'cvs',
+    'entrepreneurship_barriers',
+    'entrepreneurship_skills',
+    'interview_sessions',
+    'mentor_connections',
+    'needs_assessments',
+    'pitches',
+    'questionnaire_answers',
+    'recommendations',
+    'sector_selections',
+    'skills',
+    'support_preferences',
+  ];
+
+  /**
+   * Permanently delete a user account and all associated personal data in a
+   * single transaction. Used both by admin deletion and user self-deletion.
+   */
+  async deleteAccount(userId: string) {
+    const user = await this.usersRepo.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    await this.dataSource.transaction(async (manager) => {
+      for (const table of UsersService.USER_SCOPED_TABLES) {
+        await manager.query(
+          `DELETE FROM "${table}" WHERE "user_id" = $1`,
+          [userId],
+        );
+      }
+      await manager.delete(UserEntity, { id: userId });
+    });
+
+    return { ok: true, message: 'Account and all associated data deleted' };
+  }
 
   async create(dto: CreateUserDto) {
     const passwordHash = await bcrypt.hash(dto.password, 10);

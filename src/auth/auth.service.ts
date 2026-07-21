@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../users/users.service';
+import { MailService } from '../mail/mail.service';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 
@@ -9,6 +10,7 @@ export class AuthService {
 	constructor(
 		private readonly usersService: UsersService,
 		private readonly configService: ConfigService,
+		private readonly mailService: MailService,
 	) {}
 
 	async validateUser(email: string, pass: string): Promise<any> {
@@ -37,15 +39,21 @@ export class AuthService {
 	}
 
 	async requestPasswordReset(email: string) {
-		const token = crypto.randomBytes(32).toString('hex');
+		// 6-digit numeric code — easy to type from the email into the app.
+		const code = crypto.randomInt(0, 1_000_000).toString().padStart(6, '0');
 		const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
-		const result = await this.usersService.setResetToken(email, token, expires);
-		if (!result) {
-			// Don't reveal if email exists or not
-			return { ok: true, message: 'إذا كان البريد الإلكتروني مسجل، سيتم إرسال رابط إعادة التعيين' };
+		const result = await this.usersService.setResetToken(email, code, expires);
+
+		// Always return the same generic response so callers cannot tell whether
+		// the email is registered. The code is delivered ONLY via email — never
+		// returned in the API response.
+		if (result) {
+			await this.mailService.sendPasswordResetCode(email, code);
 		}
-		// In production, send email here. For now, return token directly for testing.
-		return { ok: true, message: 'رابط إعادة التعيين جاهز', resetToken: token };
+		return {
+			ok: true,
+			message: 'إذا كان البريد الإلكتروني مسجل، سيتم إرسال رمز إعادة التعيين إليه',
+		};
 	}
 
 	async resetPassword(token: string, newPassword: string) {

@@ -191,32 +191,8 @@ export class AdminService implements OnModuleInit {
   }
 
   async deleteUser(userId: string) {
-    const user = await this.usersService.findOne(userId);
-    if (!user) throw new NotFoundException('User not found');
-
-    // Delete all user data from every table
-    await Promise.all([
-      this.questionnaireRepo.delete({ userId }),
-      this.cvRepo.delete({ userId }),
-      this.interviewRepo.delete({ userId }),
-      this.businessPlanRepo.delete({ userId }),
-      this.pitchRepo.delete({ userId }),
-      this.barrierRepo.delete({ userId }),
-      this.entBarrierRepo.delete({ userId }),
-      this.needsRepo.delete({ userId }),
-      this.sectorsRepo.delete({ userId }),
-      this.skillsRepo.delete({ userId }),
-      this.commTrainingRepo.delete({ userId }),
-      this.entSkillsRepo.delete({ userId }),
-      this.supportRepo.delete({ userId }),
-      this.recommendationRepo.delete({ userId }),
-      this.mentorConnRepo.delete({ userId }),
-      this.analyticsEventRepo.delete({ userId }),
-    ]);
-
-    // Finally delete the user itself
-    await this.usersService.deleteUser(userId);
-
-    return { ok: true };
+    // Delegates to the single transactional purge in UsersService so admin
+    // deletion and user self-deletion stay in sync.
+    return this.usersService.deleteAccount(userId);
   }
 }

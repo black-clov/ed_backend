@@ -1,5 +1,5 @@
-import { Body, Controller, Get, Param, Post, Put, Res, HttpStatus } from '@nestjs/common';
-import type { Response } from 'express';
+import { Body, Controller, Delete, Get, Param, Post, Put, Req, Res, HttpStatus } from '@nestjs/common';
+import type { Request, Response } from 'express';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersService } from './users.service';
@@ -39,5 +39,15 @@ export class UsersController {
   @Put(':id')
   async update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
     return this.usersService.update(id, dto);
+  }
+
+  /**
+   * Delete the currently authenticated user's own account and all their data.
+   * Required by Google Play for apps that allow account creation.
+   */
+  @Delete('me')
+  async deleteOwnAccount(@Req() req: Request) {
+    const userId = (req as any).user?.sub as string;
+    return this.usersService.deleteAccount(userId);
   }
 }
