@@ -1,4 +1,5 @@
 import { Injectable, OnModuleInit, Logger, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../users/users.service';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -20,8 +21,6 @@ import { RecommendationEntity } from '../recommendations/entities/recommendation
 import { MentorConnectionEntity } from '../mentors/entities/mentor-connection.entity';
 import { AnalyticsEventEntity } from '../analytics/entities/analytics-event.entity';
 
-const ADMIN_EMAIL = 'mouhsine.elmoudir@gmail.com';
-
 @Injectable()
 export class AdminService implements OnModuleInit {
   private readonly logger = new Logger(AdminService.name);
@@ -29,6 +28,7 @@ export class AdminService implements OnModuleInit {
   constructor(
     private readonly usersService: UsersService,
     private readonly analyticsService: AnalyticsService,
+    private readonly config: ConfigService,
     @InjectRepository(QuestionnaireAnswerEntity)
     private readonly questionnaireRepo: Repository<QuestionnaireAnswerEntity>,
     @InjectRepository(CvEntity)
@@ -64,15 +64,16 @@ export class AdminService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    const user = await this.usersService.findByEmail(ADMIN_EMAIL);
+    // Optionally promote a single bootstrap account to admin. The email comes
+    // from the ADMIN_EMAIL env var (never hardcoded), and we only elevate the
+    // role — the password is NEVER touched, so the user keeps whatever they set.
+    const adminEmail = this.config.get<string>('ADMIN_EMAIL');
+    if (!adminEmail) return;
+
+    const user = await this.usersService.findByEmail(adminEmail);
     if (user && user.role !== 'admin') {
       await this.usersService.updateRole(user.id, 'admin');
-      this.logger.log(`Promoted ${ADMIN_EMAIL} to admin`);
-    }
-    // Password: Edmaj@2024
-    if (user) {
-      await this.usersService.updatePassword(user.id, '$2b$10$lYMTiTC01ieYVWxgUFHmOut1QQYT/TLl57EnVF6opwFHf9LzcBXKS');
-      this.logger.log(`Reset password for ${ADMIN_EMAIL}`);
+      this.logger.log(`Promoted ${adminEmail} to admin`);
     }
   }
 
