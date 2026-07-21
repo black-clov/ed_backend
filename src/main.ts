@@ -20,7 +20,7 @@ async function bootstrap() {
   );
 
   const allowedOrigins = [
-    'https://ed-backend-o1dv.onrender.com',
+    'https://ed-backend-1.onrender.com',
     ...(config.get<string>('NODE_ENV') !== 'production'
       ? ['http://localhost:3000', 'http://localhost:4200', 'http://localhost:8080']
       : []),
