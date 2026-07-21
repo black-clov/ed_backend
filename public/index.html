@@ -321,7 +321,9 @@
     const opts = { method, headers };
     if (body) opts.body = isFormData ? body : JSON.stringify(body);
     const r = await fetch(API + path, opts);
-    if (r.status === 401) { logout(); throw new Error('انتهت الجلسة'); }
+    // A 401 on the login call means bad credentials — let doLogin surface that.
+    // A 401 on any other (authenticated) call means the token expired.
+    if (r.status === 401 && !path.includes('/auth/login')) { logout(); throw new Error('انتهت الجلسة'); }
     if (!r.ok) {
       let msg = 'حدث خطأ';
       try { const d = await r.json(); msg = Array.isArray(d.message) ? d.message.join(' — ') : (d.message || msg); } catch (_) {}
