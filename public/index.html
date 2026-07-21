@@ -307,7 +307,7 @@
 <div id="toast"></div>
 
 <script>
-  const API = 'https://ed-backend-o1dv.onrender.com/api';
+  const API = window.location.origin + '/api';
   const CHUNK_SIZE = 5 * 1024 * 1024; // 5 MB
   let token = localStorage.getItem('edmaj_token') || '';
   let uploadedVideoUrl = ''; // set after a successful file upload
@@ -581,7 +581,7 @@
         totalChunks,
       });
 
-      uploadedVideoUrl = 'https://ed-backend-o1dv.onrender.com' + result.url;
+      uploadedVideoUrl = window.location.origin + result.url;
       document.getElementById('progress-fill').style.width = '100%';
       document.getElementById('progress-pct').textContent = '100%';
 
