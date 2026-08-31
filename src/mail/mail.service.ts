@@ -41,7 +41,7 @@ export class MailService {
   }
 
   private get from(): string {
-    return this.config.get<string>('SMTP_FROM', 'Eidmaj <no-reply@eidmaj.ma>');
+    return this.config.get<string>('SMTP_FROM', 'Eidmaj <contact@e-idmaj.ma>');
   }
 
   /**
