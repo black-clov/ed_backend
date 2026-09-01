@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { OpportunityEntity } from './entities/opportunity.entity';
@@ -7,7 +7,7 @@ import { NeedsAssessmentEntity } from '../needs/entities/needs-assessment.entity
 import { QuestionnaireAnswerEntity } from '../questionnaire/entities/questionnaire-answer.entity';
 
 @Injectable()
-export class OpportunitiesService implements OnModuleInit {
+export class OpportunitiesService {
   constructor(
     @InjectRepository(OpportunityEntity)
     private readonly opportunityRepo: Repository<OpportunityEntity>,
@@ -19,78 +19,6 @@ export class OpportunitiesService implements OnModuleInit {
     private readonly questionnaireRepo: Repository<QuestionnaireAnswerEntity>,
   ) {}
 
-  /** Seed default opportunities if the table is empty. */
-  async onModuleInit() {
-    const count = await this.opportunityRepo.count();
-    if (count === 0) {
-      await this.opportunityRepo.save([
-        {
-          title: 'مساعد دعم العملاء',
-          type: 'job',
-          location: 'الدار البيضاء',
-          description: 'تدريب لمدة 3 أشهر مع دعم وتوجيه عملي في خدمة الزبناء.',
-          requiredSkills: ['التواصل', 'العمل الجماعي', 'حل المشكلات'],
-          suitableForNeeds: ['jobs', 'training', 'confidence'],
-        },
-        {
-          title: 'متدرب في العمليات الرقمية',
-          type: 'internship',
-          location: 'الرباط',
-          description: 'تدريب عملي في المجال الرقمي مع شركة رائدة.',
-          requiredSkills: ['المهارات الرقمية', 'التنظيم', 'التعلم السريع'],
-          suitableForNeeds: ['digital', 'training', 'learning'],
-        },
-        {
-          title: 'برنامج أساسيات التجارة الإلكترونية',
-          type: 'training',
-          location: 'مراكش',
-          description: 'برنامج لمدة 6 أسابيع يركز على أساسيات البيع عبر الإنترنت.',
-          requiredSkills: ['المهارات الرقمية', 'الإبداع'],
-          suitableForNeeds: ['entrepreneurship', 'digital', 'learning'],
-        },
-        {
-          title: 'ورشة بناء الشبكات المهنية',
-          type: 'training',
-          location: 'فاس',
-          description: 'ورشة تدريبية لتعلم كيفية بناء علاقات مهنية فعالة.',
-          requiredSkills: ['التواصل', 'العمل الجماعي'],
-          suitableForNeeds: ['networking', 'confidence'],
-        },
-        {
-          title: 'دورة اللغة الفرنسية المهنية',
-          type: 'training',
-          location: 'طنجة',
-          description: 'دورة لتعلم الفرنسية المستخدمة في بيئة العمل.',
-          requiredSkills: ['التعلم السريع'],
-          suitableForNeeds: ['languages', 'learning'],
-        },
-        {
-          title: 'مساعد مبيعات مبتدئ',
-          type: 'job',
-          location: 'أكادير',
-          description: 'فرصة عمل للمبتدئين مع تدريب على المبيعات والتواصل.',
-          requiredSkills: ['التواصل', 'الإقناع', 'المرونة'],
-          suitableForNeeds: ['jobs', 'confidence', 'training'],
-        },
-        {
-          title: 'برنامج ريادة الأعمال الشبابية',
-          type: 'training',
-          location: 'الرباط',
-          description: 'برنامج مكثف لدعم المشاريع الصغيرة والمتوسطة.',
-          requiredSkills: ['القيادة', 'الإبداع', 'التنظيم'],
-          suitableForNeeds: ['entrepreneurship', 'confidence', 'networking'],
-        },
-        {
-          title: 'مساعد إداري',
-          type: 'job',
-          location: 'الدار البيضاء',
-          description: 'وظيفة مكتبية تتطلب مهارات التنظيم والتواصل.',
-          requiredSkills: ['التنظيم', 'المهارات الرقمية', 'التواصل'],
-          suitableForNeeds: ['jobs', 'digital', 'cv'],
-        },
-      ]);
-    }
-  }
 
   async findAll() {
     return this.opportunityRepo.find();
