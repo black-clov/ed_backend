@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="fr" dir="ltr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EdMaj — لوحة الإدارة</title>
+  <title>EdMaj — Panneau d'administration</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -37,18 +37,18 @@
 
     /* App shell */
     #app { display:none; }
-    .sidebar { position:fixed; top:0; right:0; width:220px; height:100vh; background:var(--surface); border-left:1px solid var(--border); padding:24px 0; z-index:10; display:flex; flex-direction:column; }
+    .sidebar { position:fixed; top:0; left:0; width:220px; height:100vh; background:var(--surface); border-right:1px solid var(--border); padding:24px 0; z-index:10; display:flex; flex-direction:column; }
     .sidebar-logo { padding:0 24px 24px; border-bottom:1px solid var(--border); margin-bottom:12px; }
     .sidebar-logo span { font-size:1.5rem; font-weight:800; background:linear-gradient(135deg,#6366f1,#a78bfa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
     .sidebar-logo p { font-size:.72rem; color:var(--muted); }
-    .nav-item { display:flex; align-items:center; gap:10px; padding:11px 24px; color:var(--muted); cursor:pointer; font-size:.9rem; transition:all .15s; border-right:3px solid transparent; }
+    .nav-item { display:flex; align-items:center; gap:10px; padding:11px 24px; color:var(--muted); cursor:pointer; font-size:.9rem; transition:all .15s; border-left:3px solid transparent; }
     .nav-item:hover { color:var(--text); background:var(--indigo-dim); }
-    .nav-item.active { color:var(--indigo-light); border-right-color:var(--indigo); background:var(--indigo-dim); }
+    .nav-item.active { color:var(--indigo-light); border-left-color:var(--indigo); background:var(--indigo-dim); }
     .nav-item svg { flex-shrink:0; }
     .sidebar-foot { margin-top:auto; padding:16px 24px; border-top:1px solid var(--border); }
     .sidebar-foot button { background:none; border:none; color:var(--muted); cursor:pointer; font-size:.85rem; display:flex; align-items:center; gap:6px; }
     .sidebar-foot button:hover { color:var(--red); }
-    .main { margin-right:220px; padding:32px; min-height:100vh; }
+    .main { margin-left:220px; padding:32px; min-height:100vh; }
     .page { display:none; }
     .page.active { display:block; }
     .page-title { font-size:1.5rem; font-weight:700; margin-bottom:24px; }
@@ -64,7 +64,7 @@
     .card-header { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
     .card-header h3 { font-size:1rem; font-weight:600; }
     table { width:100%; border-collapse:collapse; }
-    th { padding:12px 16px; text-align:right; font-size:.78rem; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.05em; border-bottom:1px solid var(--border); }
+    th { padding:12px 16px; text-align:left; font-size:.78rem; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.05em; border-bottom:1px solid var(--border); }
     td { padding:12px 16px; font-size:.88rem; border-bottom:1px solid var(--border); vertical-align:middle; }
     tr:last-child td { border-bottom:none; }
     tr:hover td { background:var(--indigo-dim); }
@@ -114,7 +114,7 @@
     .progress-info { display:flex; justify-content:space-between; font-size:.78rem; color:var(--muted); margin-top:5px; }
     .upload-done { margin-top:10px; background:rgba(34,197,94,.1); border:1px solid rgba(34,197,94,.3); border-radius:8px; padding:10px 14px; font-size:.85rem; color:var(--green); display:none; align-items:center; gap:8px; }
     .upload-done.show { display:flex; }
-    .upload-done a { color:var(--green); font-size:.8rem; margin-right:auto; }
+    .upload-done a { color:var(--green); font-size:.8rem; margin-left:auto; }
 
     /* Toast */
     #toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(80px); background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:12px 24px; font-size:.9rem; z-index:999; transition:transform .3s; box-shadow:0 8px 30px rgba(0,0,0,.4); pointer-events:none; white-space:nowrap; }
@@ -133,14 +133,14 @@
 <!-- LOGIN -->
 <div id="login-screen">
   <div class="login-card">
-    <div class="login-logo"><span>EdMaj</span><p>لوحة تحكم المدير</p></div>
-    <label>البريد الإلكتروني</label>
+    <div class="login-logo"><span>EdMaj</span><p>Panneau de contrôle administrateur</p></div>
+    <label>Adresse e-mail</label>
     <input type="email" id="login-email" placeholder="admin@example.com" autocomplete="email">
-    <label>كلمة المرور</label>
+    <label>Mot de passe</label>
     <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
     <button class="btn btn-primary btn-full" onclick="doLogin()">
       <span id="login-spinner" class="spinner" style="display:none"></span>
-      دخول
+      Connexion
     </button>
     <p class="login-err" id="login-err"></p>
   </div>
@@ -149,61 +149,61 @@
 <!-- APP -->
 <div id="app">
   <nav class="sidebar">
-    <div class="sidebar-logo"><span>EdMaj</span><p>لوحة الإدارة</p></div>
+    <div class="sidebar-logo"><span>EdMaj</span><p>Panneau d'administration</p></div>
     <div class="nav-item active" id="nav-stats" onclick="showPage('stats',this)">
       <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
-      الإحصائيات
+      Statistiques
     </div>
     <div class="nav-item" id="nav-videos" onclick="showPage('videos',this)">
       <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polygon points="10,9 16,12 10,15"/></svg>
-      الفيديوهات
+      Vidéos
     </div>
     <div class="nav-item" id="nav-users" onclick="showPage('users',this)">
       <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75M21 21v-2a4 4 0 0 0-3-3.85"/></svg>
-      المستخدمون
+      Utilisateurs
     </div>
     <div class="sidebar-foot">
       <button onclick="logout()">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-        تسجيل الخروج
+        Déconnexion
       </button>
     </div>
   </nav>
 
   <main class="main">
     <div id="page-stats" class="page active">
-      <h2 class="page-title">الإحصائيات</h2>
+      <h2 class="page-title">Statistiques</h2>
       <div class="stats-grid" id="stats-grid"><div class="stat-card"><div class="spinner"></div></div></div>
       <div class="card">
-        <div class="card-header"><h3>استخدام الميزات</h3></div>
-        <table><tbody id="features-body"><tr><td class="empty">جارٍ التحميل…</td></tr></tbody></table>
+        <div class="card-header"><h3>Utilisation des fonctionnalités</h3></div>
+        <table><tbody id="features-body"><tr><td class="empty">Chargement…</td></tr></tbody></table>
       </div>
     </div>
 
     <div id="page-videos" class="page">
-      <h2 class="page-title">الفيديوهات</h2>
+      <h2 class="page-title">Vidéos</h2>
       <div class="card">
         <div class="card-header">
-          <h3 id="videos-count">الفيديوهات</h3>
-          <button class="btn btn-primary" onclick="openVideoModal()">+ إضافة فيديو</button>
+          <h3 id="videos-count">Vidéos</h3>
+          <button class="btn btn-primary" onclick="openVideoModal()">+ Ajouter une vidéo</button>
         </div>
         <div style="overflow-x:auto">
           <table>
-            <thead><tr><th>العنوان</th><th>الفئة</th><th>الرابط</th><th>المدة</th><th>الترتيب</th><th>الإجراءات</th></tr></thead>
-            <tbody id="videos-body"><tr><td colspan="6" class="empty">جارٍ التحميل…</td></tr></tbody>
+            <thead><tr><th>Titre</th><th>Catégorie</th><th>Lien</th><th>Durée</th><th>Ordre</th><th>Actions</th></tr></thead>
+            <tbody id="videos-body"><tr><td colspan="6" class="empty">Chargement…</td></tr></tbody>
           </table>
         </div>
       </div>
     </div>
 
     <div id="page-users" class="page">
-      <h2 class="page-title">المستخدمون</h2>
+      <h2 class="page-title">Utilisateurs</h2>
       <div class="card">
-        <div class="card-header"><h3 id="users-count">المستخدمون</h3></div>
+        <div class="card-header"><h3 id="users-count">Utilisateurs</h3></div>
         <div style="overflow-x:auto">
           <table>
-            <thead><tr><th>الاسم</th><th>البريد</th><th>المدينة</th><th>الدور</th><th>الإجراءات</th></tr></thead>
-            <tbody id="users-body"><tr><td colspan="5" class="empty">جارٍ التحميل…</td></tr></tbody>
+            <thead><tr><th>Nom</th><th>E-mail</th><th>Ville</th><th>Rôle</th><th>Actions</th></tr></thead>
+            <tbody id="users-body"><tr><td colspan="5" class="empty">Chargement…</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -215,28 +215,28 @@
 <div class="overlay" id="video-overlay">
   <div class="modal">
     <div class="modal-header">
-      <h3 id="vmodal-title">إضافة فيديو</h3>
+      <h3 id="vmodal-title">Ajouter une vidéo</h3>
       <button class="modal-close" onclick="closeVideoModal()">✕</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="v-id">
 
-      <label>العنوان *</label>
-      <input type="text" id="v-title" placeholder="عنوان الفيديو">
+      <label>Titre *</label>
+      <input type="text" id="v-title" placeholder="Titre de la vidéo">
 
-      <label>الوصف *</label>
-      <textarea id="v-description" placeholder="وصف مختصر للفيديو"></textarea>
+      <label>Description *</label>
+      <textarea id="v-description" placeholder="Brève description de la vidéo"></textarea>
 
       <!-- Source toggle -->
-      <label>مصدر الفيديو *</label>
+      <label>Source de la vidéo *</label>
       <div class="source-toggle">
-        <button id="src-url-btn" class="active" onclick="switchSource('url')">🔗 رابط URL</button>
-        <button id="src-file-btn" onclick="switchSource('file')">📁 رفع ملف</button>
+        <button id="src-url-btn" class="active" onclick="switchSource('url')">🔗 Lien URL</button>
+        <button id="src-file-btn" onclick="switchSource('file')">📁 Téléverser un fichier</button>
       </div>
 
       <!-- URL mode -->
       <div id="source-url">
-        <label>رابط الفيديو (YouTube أو رابط مباشر)</label>
+        <label>Lien de la vidéo (YouTube ou lien direct)</label>
         <input type="url" id="v-videoUrl" placeholder="https://youtube.com/watch?v=...">
       </div>
 
@@ -244,50 +244,50 @@
       <div id="source-file" style="display:none">
         <div class="upload-zone" id="upload-zone" onclick="document.getElementById('v-file-input').click()" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
           <div class="uz-icon">🎬</div>
-          <strong style="font-size:.95rem">اضغط لاختيار ملف أو اسحبه هنا</strong>
-          <p>MP4، MOV، WebM، AVI — حتى 500 ميغابايت</p>
+          <strong style="font-size:.95rem">Cliquez pour choisir un fichier ou glissez-le ici</strong>
+          <p>MP4, MOV, WebM, AVI — jusqu'à 500 Mo</p>
           <input type="file" id="v-file-input" accept="video/mp4,video/quicktime,video/webm,video/x-msvideo,.mp4,.mov,.webm,.avi" onchange="onFileSelected(this.files[0])">
         </div>
         <div class="progress-wrap" id="progress-wrap">
           <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill"></div></div>
           <div class="progress-info">
-            <span id="progress-text">جارٍ الرفع…</span>
+            <span id="progress-text">Téléversement en cours…</span>
             <span id="progress-pct">0%</span>
           </div>
         </div>
         <div class="upload-done" id="upload-done">
           ✅ <span id="upload-done-name"></span>
-          <a id="upload-done-link" href="#" target="_blank" rel="noopener">معاينة ↗</a>
+          <a id="upload-done-link" href="#" target="_blank" rel="noopener">Aperçu ↗</a>
         </div>
       </div>
 
-      <label>رابط الصورة المصغرة (اختياري)</label>
+      <label>Lien de la miniature (facultatif)</label>
       <input type="url" id="v-thumbnailUrl" placeholder="https://...">
 
       <div class="form-row">
         <div>
-          <label>الفئة *</label>
+          <label>Catégorie *</label>
           <select id="v-category">
-            <option value="">اختر الفئة</option>
-            <option value="cv">السيرة الذاتية</option>
-            <option value="interview">المقابلة</option>
-            <option value="skills">المهارات</option>
-            <option value="softskills">المهارات الشخصية</option>
-            <option value="opportunities">الفرص</option>
-            <option value="entrepreneurship">ريادة الأعمال</option>
+            <option value="">Choisir une catégorie</option>
+            <option value="cv">CV</option>
+            <option value="interview">Entretien</option>
+            <option value="skills">Compétences</option>
+            <option value="softskills">Compétences personnelles</option>
+            <option value="opportunities">Opportunités</option>
+            <option value="entrepreneurship">Entrepreneuriat</option>
           </select>
         </div>
         <div>
-          <label>المدة بالثواني</label>
+          <label>Durée en secondes</label>
           <input type="number" id="v-duration" placeholder="180" min="0">
         </div>
       </div>
-      <label>الترتيب</label>
+      <label>Ordre</label>
       <input type="number" id="v-order" placeholder="1" min="0">
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeVideoModal()" id="v-cancel-btn">إلغاء</button>
-      <button class="btn btn-primary" id="v-save-btn" onclick="saveVideo()">حفظ</button>
+      <button class="btn btn-ghost" onclick="closeVideoModal()" id="v-cancel-btn">Annuler</button>
+      <button class="btn btn-primary" id="v-save-btn" onclick="saveVideo()">Enregistrer</button>
     </div>
   </div>
 </div>
@@ -295,11 +295,11 @@
 <!-- CONFIRM -->
 <div class="overlay" id="confirm-overlay">
   <div class="modal" style="max-width:380px">
-    <div class="modal-header"><h3>تأكيد الحذف</h3><button class="modal-close" onclick="closeConfirm()">✕</button></div>
+    <div class="modal-header"><h3>Confirmer la suppression</h3><button class="modal-close" onclick="closeConfirm()">✕</button></div>
     <div class="modal-body"><p id="confirm-msg" style="color:var(--muted);line-height:1.6"></p></div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeConfirm()">إلغاء</button>
-      <button class="btn btn-danger" id="confirm-ok-btn">حذف</button>
+      <button class="btn btn-ghost" onclick="closeConfirm()">Annuler</button>
+      <button class="btn btn-danger" id="confirm-ok-btn">Supprimer</button>
     </div>
   </div>
 </div>
@@ -323,9 +323,9 @@
     const r = await fetch(API + path, opts);
     // A 401 on the login call means bad credentials — let doLogin surface that.
     // A 401 on any other (authenticated) call means the token expired.
-    if (r.status === 401 && !path.includes('/auth/login')) { logout(); throw new Error('انتهت الجلسة'); }
+    if (r.status === 401 && !path.includes('/auth/login')) { logout(); throw new Error('Session expirée'); }
     if (!r.ok) {
-      let msg = 'حدث خطأ';
+      let msg = 'Une erreur est survenue';
       try { const d = await r.json(); msg = Array.isArray(d.message) ? d.message.join(' — ') : (d.message || msg); } catch (_) {}
       throw new Error(msg);
     }
@@ -356,17 +356,17 @@
     const errEl = document.getElementById('login-err');
     const spin  = document.getElementById('login-spinner');
     errEl.textContent = '';
-    if (!email || !pass) { errEl.textContent = 'أدخل البريد وكلمة المرور'; return; }
+    if (!email || !pass) { errEl.textContent = 'Veuillez saisir l\'adresse e-mail et le mot de passe'; return; }
     spin.style.display = 'inline-block';
     try {
       const data = await apiFetch('POST', '/auth/login', { email, password: pass });
-      if (data.role !== 'admin') { errEl.textContent = 'هذا الحساب ليس لديه صلاحية المدير'; return; }
+      if (data.role !== 'admin') { errEl.textContent = 'Ce compte ne dispose pas des droits administrateur'; return; }
       token = data.access_token;
       localStorage.setItem('edmaj_token', token);
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('app').style.display = 'block';
       loadStats();
-    } catch (e) { errEl.textContent = e.message || 'بيانات الدخول غير صحيحة'; }
+    } catch (e) { errEl.textContent = e.message || 'Identifiants de connexion incorrects'; }
     finally { spin.style.display = 'none'; }
   }
   function logout() {
@@ -385,46 +385,46 @@
     try {
       const s = await apiFetch('GET', '/admin/stats');
       document.getElementById('stats-grid').innerHTML = `
-        <div class="stat-card"><div class="num">${s.totalUsers??0}</div><div class="lbl">إجمالي المستخدمين</div></div>
-        <div class="stat-card"><div class="num">${s.activeUsers7d??0}</div><div class="lbl">نشطون (7 أيام)</div></div>
-        <div class="stat-card"><div class="num">${s.features?.cvs??0}</div><div class="lbl">سيرة ذاتية</div></div>
-        <div class="stat-card"><div class="num">${s.features?.interviews??0}</div><div class="lbl">مقابلات</div></div>
-        <div class="stat-card"><div class="num">${s.features?.businessPlans??0}</div><div class="lbl">خطط أعمال</div></div>
-        <div class="stat-card"><div class="num">${s.features?.pitches??0}</div><div class="lbl">عروض تقديمية</div></div>`;
-      const lbl = {questionnaires:'الاستبيانات',cvs:'السير الذاتية',interviews:'المقابلات',businessPlans:'خطط الأعمال',pitches:'العروض التقديمية'};
+        <div class="stat-card"><div class="num">${s.totalUsers??0}</div><div class="lbl">Total des utilisateurs</div></div>
+        <div class="stat-card"><div class="num">${s.activeUsers7d??0}</div><div class="lbl">Actifs (7 jours)</div></div>
+        <div class="stat-card"><div class="num">${s.features?.cvs??0}</div><div class="lbl">CV</div></div>
+        <div class="stat-card"><div class="num">${s.features?.interviews??0}</div><div class="lbl">Entretiens</div></div>
+        <div class="stat-card"><div class="num">${s.features?.businessPlans??0}</div><div class="lbl">Plans d'affaires</div></div>
+        <div class="stat-card"><div class="num">${s.features?.pitches??0}</div><div class="lbl">Présentations</div></div>`;
+      const lbl = {questionnaires:'Questionnaires',cvs:'CV',interviews:'Entretiens',businessPlans:'Plans d\'affaires',pitches:'Présentations'};
       document.getElementById('features-body').innerHTML =
         Object.entries(s.features??{}).map(([k,v]) => `<tr><td>${lbl[k]??k}</td><td><strong>${v}</strong></td></tr>`).join('') ||
-        '<tr><td class="empty">لا توجد بيانات</td></tr>';
+        '<tr><td class="empty">Aucune donnée disponible</td></tr>';
     } catch (e) { toast(e.message,'error'); }
   }
 
   // ── videos ──────────────────────────────────────────────────────────
   let videosData = [];
-  const catLbl = {cv:'السيرة الذاتية',interview:'المقابلة',skills:'المهارات',softskills:'المهارات الشخصية',opportunities:'الفرص',entrepreneurship:'ريادة الأعمال'};
+  const catLbl = {cv:'CV',interview:'Entretien',skills:'Compétences',softskills:'Compétences personnelles',opportunities:'Opportunités',entrepreneurship:'Entrepreneuriat'};
 
   async function loadVideos() {
     try {
       videosData = await apiFetch('GET', '/admin/videos') ?? [];
-      document.getElementById('videos-count').textContent = `الفيديوهات (${videosData.length})`;
+      document.getElementById('videos-count').textContent = `Vidéos (${videosData.length})`;
       const tbody = document.getElementById('videos-body');
-      if (!videosData.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty">لا توجد فيديوهات — أضف أول فيديو!</td></tr>'; return; }
+      if (!videosData.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty">Aucune vidéo — ajoutez la première vidéo !</td></tr>'; return; }
       tbody.innerHTML = videosData.map(v => `
         <tr>
           <td><div class="truncate" title="${esc(v.title)}">${esc(v.title)}</div></td>
           <td><span class="badge badge-cat">${esc(catLbl[v.category]??v.category)}</span></td>
-          <td><a href="${esc(v.videoUrl)}" target="_blank" rel="noopener" style="color:var(--indigo-light);font-size:.82rem">رابط ↗</a></td>
+          <td><a href="${esc(v.videoUrl)}" target="_blank" rel="noopener" style="color:var(--indigo-light);font-size:.82rem">Lien ↗</a></td>
           <td>${v.durationSeconds??'—'}</td>
           <td>${v.order??'—'}</td>
           <td><div class="action-btns">
-            <button class="icon-btn icon-btn-edit" onclick="editVideo('${esc(v.id)}')" title="تعديل">✏️</button>
-            <button class="icon-btn icon-btn-delete" onclick="confirmDeleteVideo('${esc(v.id)}','${esc(v.title)}')" title="حذف">🗑️</button>
+            <button class="icon-btn icon-btn-edit" onclick="editVideo('${esc(v.id)}')" title="Modifier">✏️</button>
+            <button class="icon-btn icon-btn-delete" onclick="confirmDeleteVideo('${esc(v.id)}','${esc(v.title)}')" title="Supprimer">🗑️</button>
           </div></td>
         </tr>`).join('');
     } catch (e) { toast(e.message,'error'); }
   }
 
   function openVideoModal() {
-    document.getElementById('vmodal-title').textContent = 'إضافة فيديو';
+    document.getElementById('vmodal-title').textContent = 'Ajouter une vidéo';
     document.getElementById('v-id').value = '';
     document.getElementById('v-title').value = '';
     document.getElementById('v-description').value = '';
@@ -441,7 +441,7 @@
   function editVideo(id) {
     const v = videosData.find(x => String(x.id) === String(id));
     if (!v) return;
-    document.getElementById('vmodal-title').textContent = 'تعديل الفيديو';
+    document.getElementById('vmodal-title').textContent = 'Modifier la vidéo';
     document.getElementById('v-id').value = v.id;
     document.getElementById('v-title').value = v.title ?? '';
     document.getElementById('v-description').value = v.description ?? '';
@@ -456,12 +456,12 @@
   }
 
   function closeVideoModal() {
-    if (uploading) { toast('يرجى الانتظار حتى انتهاء الرفع', 'error'); return; }
+    if (uploading) { toast('Veuillez patienter jusqu\'à la fin du téléversement', 'error'); return; }
     document.getElementById('video-overlay').classList.remove('open');
   }
 
   async function saveVideo() {
-    if (uploading) { toast('يرجى الانتظار حتى انتهاء الرفع', 'error'); return; }
+    if (uploading) { toast('Veuillez patienter jusqu\'à la fin du téléversement', 'error'); return; }
     const id    = document.getElementById('v-id').value;
     const title = document.getElementById('v-title').value.trim();
     const desc  = document.getElementById('v-description').value.trim();
@@ -478,8 +478,8 @@
       videoUrl = uploadedVideoUrl;
     }
 
-    if (!title || !desc || !cat) { toast('يرجى ملء الحقول المطلوبة (العنوان، الوصف، الفئة)', 'error'); return; }
-    if (!videoUrl) { toast('يرجى إدخال رابط أو رفع ملف فيديو', 'error'); return; }
+    if (!title || !desc || !cat) { toast('Veuillez remplir les champs obligatoires (titre, description, catégorie)', 'error'); return; }
+    if (!videoUrl) { toast('Veuillez saisir un lien ou téléverser un fichier vidéo', 'error'); return; }
 
     const body = { title, description: desc, videoUrl, category: cat };
     if (thumb) body.thumbnailUrl = thumb;
@@ -491,17 +491,17 @@
     try {
       if (id) {
         await apiFetch('PUT', '/admin/videos/' + id, body);
-        toast('تم تحديث الفيديو بنجاح ✓');
+        toast('Vidéo mise à jour avec succès ✓');
       } else {
         await apiFetch('POST', '/admin/videos', body);
-        toast('تمت إضافة الفيديو بنجاح ✓');
+        toast('Vidéo ajoutée avec succès ✓');
       }
       closeVideoModal();
       loadVideos();
     } catch (e) {
       toast(e.message, 'error');
     } finally {
-      btn.disabled = false; btn.textContent = 'حفظ';
+      btn.disabled = false; btn.textContent = 'Enregistrer';
     }
   }
 
@@ -518,11 +518,11 @@
     uploadedVideoUrl = '';
     uploading = false;
     document.getElementById('v-file-input').value = '';
-    document.getElementById('upload-zone').querySelector('strong').textContent = 'اضغط لاختيار ملف أو اسحبه هنا';
+    document.getElementById('upload-zone').querySelector('strong').textContent = 'Cliquez pour choisir un fichier ou glissez-le ici';
     document.getElementById('progress-wrap').classList.remove('show');
     document.getElementById('upload-done').classList.remove('show');
     document.getElementById('progress-fill').style.width = '0%';
-    document.getElementById('progress-text').textContent = 'جارٍ الرفع…';
+    document.getElementById('progress-text').textContent = 'Téléversement en cours…';
     document.getElementById('progress-pct').textContent = '0%';
   }
 
@@ -538,8 +538,8 @@
   async function onFileSelected(file) {
     if (!file) return;
     const allowed = /\.(mp4|mov|webm|avi|mkv)$/i;
-    if (!allowed.test(file.name)) { toast('نوع الملف غير مدعوم — استخدم MP4 أو MOV أو WebM', 'error'); return; }
-    if (file.size > 500 * 1024 * 1024) { toast('حجم الملف يتجاوز 500 ميغابايت', 'error'); return; }
+    if (!allowed.test(file.name)) { toast('Type de fichier non pris en charge — utilisez MP4, MOV ou WebM', 'error'); return; }
+    if (file.size > 500 * 1024 * 1024) { toast('La taille du fichier dépasse 500 Mo', 'error'); return; }
 
     uploading = true;
     uploadedVideoUrl = '';
@@ -568,15 +568,15 @@
           },
           body: fd,
         });
-        if (!r.ok) { const d = await r.json().catch(() => {}); throw new Error(d?.message || 'فشل رفع الجزء ' + i); }
+        if (!r.ok) { const d = await r.json().catch(() => {}); throw new Error(d?.message || 'Échec du téléversement du fragment ' + i); }
 
         const pct = Math.round(((i + 1) / totalChunks) * 90);
         document.getElementById('progress-fill').style.width = pct + '%';
         document.getElementById('progress-pct').textContent = pct + '%';
-        document.getElementById('progress-text').textContent = `جزء ${i + 1} من ${totalChunks}`;
+        document.getElementById('progress-text').textContent = `Fragment ${i + 1} sur ${totalChunks}`;
       }
 
-      document.getElementById('progress-text').textContent = 'جارٍ تجميع الملف…';
+      document.getElementById('progress-text').textContent = 'Assemblage du fichier en cours…';
       const result = await apiFetch('POST', '/admin/upload/merge', {
         uploadId,
         filename: file.name,
@@ -592,10 +592,10 @@
       document.getElementById('upload-done-link').href = uploadedVideoUrl;
       doneEl.classList.add('show');
 
-      toast('تم رفع الفيديو بنجاح ✓');
+      toast('Vidéo téléversée avec succès ✓');
     } catch (e) {
       toast(e.message, 'error');
-      document.getElementById('progress-text').textContent = 'فشل الرفع';
+      document.getElementById('progress-text').textContent = 'Échec du téléversement';
     } finally {
       uploading = false;
       document.getElementById('v-save-btn').disabled = false;
@@ -606,9 +606,9 @@
   // ── video delete ────────────────────────────────────────────────────
   let _confirmCb = null;
   function confirmDeleteVideo(id, title) {
-    document.getElementById('confirm-msg').textContent = `هل أنت متأكد من حذف الفيديو "${title}"؟`;
+    document.getElementById('confirm-msg').textContent = `Êtes-vous sûr de vouloir supprimer la vidéo "${title}" ?`;
     _confirmCb = async () => {
-      try { await apiFetch('DELETE', '/admin/videos/' + id); toast('تم حذف الفيديو'); closeConfirm(); loadVideos(); }
+      try { await apiFetch('DELETE', '/admin/videos/' + id); toast('Vidéo supprimée'); closeConfirm(); loadVideos(); }
       catch (e) { toast(e.message, 'error'); }
     };
     document.getElementById('confirm-ok-btn').onclick = _confirmCb;
@@ -620,19 +620,19 @@
   async function loadUsers() {
     try {
       const users = await apiFetch('GET', '/admin/users') ?? [];
-      document.getElementById('users-count').textContent = `المستخدمون (${users.length})`;
+      document.getElementById('users-count').textContent = `Utilisateurs (${users.length})`;
       const tbody = document.getElementById('users-body');
-      if (!users.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty">لا يوجد مستخدمون</td></tr>'; return; }
+      if (!users.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty">Aucun utilisateur</td></tr>'; return; }
       tbody.innerHTML = users.map(u => `
         <tr>
           <td>${esc(((u.first_name??'') + ' ' + (u.last_name??'')).trim()) || '—'}</td>
           <td style="font-size:.82rem;color:var(--muted)">${esc(u.email??'')}</td>
           <td>${esc(u.ville??'—')}</td>
-          <td><span class="badge ${u.role==='admin'?'badge-admin':'badge-user'}">${u.role==='admin'?'مدير':'مستخدم'}</span></td>
+          <td><span class="badge ${u.role==='admin'?'badge-admin':'badge-user'}">${u.role==='admin'?'Administrateur':'Utilisateur'}</span></td>
           <td><div class="action-btns">
             ${u.role!=='admin'
-              ? `<button class="btn btn-ghost" style="font-size:.78rem;padding:5px 10px" onclick="changeRole('${u.id}','admin')">ترقية لمدير</button>`
-              : `<button class="btn btn-ghost" style="font-size:.78rem;padding:5px 10px" onclick="changeRole('${u.id}','user')">إزالة صلاحية</button>`}
+              ? `<button class="btn btn-ghost" style="font-size:.78rem;padding:5px 10px" onclick="changeRole('${u.id}','admin')">Promouvoir administrateur</button>`
+              : `<button class="btn btn-ghost" style="font-size:.78rem;padding:5px 10px" onclick="changeRole('${u.id}','user')">Révoquer les droits</button>`}
             <button class="icon-btn icon-btn-delete" onclick="confirmDeleteUser('${esc(u.id)}','${esc(u.email??'')}')">🗑️</button>
           </div></td>
         </tr>`).join('');
@@ -640,14 +640,14 @@
   }
 
   async function changeRole(id, role) {
-    try { await apiFetch('PATCH', '/admin/users/' + id + '/role', { role }); toast('تم تحديث الدور'); loadUsers(); }
+    try { await apiFetch('PATCH', '/admin/users/' + id + '/role', { role }); toast('Rôle mis à jour'); loadUsers(); }
     catch (e) { toast(e.message, 'error'); }
   }
 
   function confirmDeleteUser(id, email) {
-    document.getElementById('confirm-msg').textContent = `هل أنت متأكد من حذف "${email}"؟ سيتم حذف جميع بياناته نهائياً.`;
+    document.getElementById('confirm-msg').textContent = `Êtes-vous sûr de vouloir supprimer "${email}" ? Toutes ses données seront définitivement supprimées.`;
     _confirmCb = async () => {
-      try { await apiFetch('DELETE', '/admin/users/' + id); toast('تم حذف المستخدم'); closeConfirm(); loadUsers(); }
+      try { await apiFetch('DELETE', '/admin/users/' + id); toast('Utilisateur supprimé'); closeConfirm(); loadUsers(); }
       catch (e) { toast(e.message, 'error'); }
     };
     document.getElementById('confirm-ok-btn').onclick = _confirmCb;
