@@ -158,6 +158,10 @@
       <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polygon points="10,9 16,12 10,15"/></svg>
       Vidéos
     </div>
+    <div class="nav-item" id="nav-opportunities" onclick="showPage('opportunities',this)">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+      Offres
+    </div>
     <div class="nav-item" id="nav-users" onclick="showPage('users',this)">
       <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75M21 21v-2a4 4 0 0 0-3-3.85"/></svg>
       Utilisateurs
@@ -191,6 +195,22 @@
           <table>
             <thead><tr><th>Titre</th><th>Catégorie</th><th>Lien</th><th>Durée</th><th>Ordre</th><th>Actions</th></tr></thead>
             <tbody id="videos-body"><tr><td colspan="6" class="empty">Chargement…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="page-opportunities" class="page">
+      <h2 class="page-title">Offres</h2>
+      <div class="card">
+        <div class="card-header">
+          <h3 id="opps-count">Offres</h3>
+          <button class="btn btn-primary" onclick="openOppModal()">+ Ajouter une offre</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr><th>Titre</th><th>Type</th><th>Lieu</th><th>Compétences requises</th><th>Actions</th></tr></thead>
+            <tbody id="opps-body"><tr><td colspan="5" class="empty">Chargement…</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -292,6 +312,50 @@
   </div>
 </div>
 
+<!-- OPPORTUNITY MODAL -->
+<div class="overlay" id="opp-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="omodal-title">Ajouter une offre</h3>
+      <button class="modal-close" onclick="closeOppModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="o-id">
+
+      <label>Titre *</label>
+      <input type="text" id="o-title" placeholder="Intitulé de l'offre">
+
+      <div class="form-row">
+        <div>
+          <label>Type *</label>
+          <select id="o-type">
+            <option value="job">Emploi</option>
+            <option value="internship">Stage</option>
+            <option value="training">Formation</option>
+          </select>
+        </div>
+        <div>
+          <label>Lieu *</label>
+          <input type="text" id="o-location" placeholder="Casablanca">
+        </div>
+      </div>
+
+      <label>Description</label>
+      <textarea id="o-description" placeholder="Description de l'offre"></textarea>
+
+      <label>Compétences requises (séparées par des virgules)</label>
+      <input type="text" id="o-skills" placeholder="communication, vente, informatique">
+
+      <label>Adaptée aux besoins (séparés par des virgules)</label>
+      <input type="text" id="o-needs" placeholder="formation, expérience, accompagnement">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeOppModal()">Annuler</button>
+      <button class="btn btn-primary" id="o-save-btn" onclick="saveOpp()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
 <!-- CONFIRM -->
 <div class="overlay" id="details-overlay">
   <div class="modal" style="max-width:720px">
@@ -354,6 +418,7 @@
     el.classList.add('active');
     if (name === 'stats')  loadStats();
     if (name === 'videos') loadVideos();
+    if (name === 'opportunities') loadOpportunities();
     if (name === 'users')  loadUsers();
   }
 
@@ -657,6 +722,105 @@
     document.getElementById('confirm-msg').textContent = `Êtes-vous sûr de vouloir supprimer "${email}" ? Toutes ses données seront définitivement supprimées.`;
     _confirmCb = async () => {
       try { await apiFetch('DELETE', '/admin/users/' + id); toast('Utilisateur supprimé'); closeConfirm(); loadUsers(); }
+      catch (e) { toast(e.message, 'error'); }
+    };
+    document.getElementById('confirm-ok-btn').onclick = _confirmCb;
+    document.getElementById('confirm-overlay').classList.add('open');
+  }
+
+  // ── offres (opportunities) ──────────────────────────────────────────
+  let oppsData = [];
+  const oppTypeLbl = { job: 'Emploi', internship: 'Stage', training: 'Formation' };
+
+  async function loadOpportunities() {
+    try {
+      oppsData = await apiFetch('GET', '/admin/opportunities') ?? [];
+      document.getElementById('opps-count').textContent = `Offres (${oppsData.length})`;
+      const tbody = document.getElementById('opps-body');
+      if (!oppsData.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty">Aucune offre — ajoutez la première offre !</td></tr>'; return; }
+      tbody.innerHTML = oppsData.map(o => `
+        <tr>
+          <td><div class="truncate" title="${esc(o.title)}">${esc(o.title)}</div></td>
+          <td><span class="badge badge-cat">${esc(oppTypeLbl[o.type]??o.type)}</span></td>
+          <td>${esc(o.location??'—')}</td>
+          <td style="font-size:.82rem;color:var(--muted)">${esc((o.requiredSkills??[]).join(', ')) || '—'}</td>
+          <td><div class="action-btns">
+            <button class="icon-btn icon-btn-edit" onclick="editOpp('${esc(o.id)}')" title="Modifier">✏️</button>
+            <button class="icon-btn icon-btn-delete" onclick="confirmDeleteOpp('${esc(o.id)}','${esc(o.title)}')" title="Supprimer">🗑️</button>
+          </div></td>
+        </tr>`).join('');
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
+  function openOppModal() {
+    document.getElementById('omodal-title').textContent = 'Ajouter une offre';
+    document.getElementById('o-id').value = '';
+    document.getElementById('o-title').value = '';
+    document.getElementById('o-type').value = 'job';
+    document.getElementById('o-location').value = '';
+    document.getElementById('o-description').value = '';
+    document.getElementById('o-skills').value = '';
+    document.getElementById('o-needs').value = '';
+    document.getElementById('opp-overlay').classList.add('open');
+  }
+
+  function editOpp(id) {
+    const o = oppsData.find(x => String(x.id) === String(id));
+    if (!o) return;
+    document.getElementById('omodal-title').textContent = 'Modifier l’offre';
+    document.getElementById('o-id').value = o.id;
+    document.getElementById('o-title').value = o.title ?? '';
+    document.getElementById('o-type').value = o.type ?? 'job';
+    document.getElementById('o-location').value = o.location ?? '';
+    document.getElementById('o-description').value = o.description ?? '';
+    document.getElementById('o-skills').value = (o.requiredSkills ?? []).join(', ');
+    document.getElementById('o-needs').value = (o.suitableForNeeds ?? []).join(', ');
+    document.getElementById('opp-overlay').classList.add('open');
+  }
+
+  function closeOppModal() { document.getElementById('opp-overlay').classList.remove('open'); }
+
+  function splitList(s) {
+    return s.split(',').map(x => x.trim()).filter(Boolean);
+  }
+
+  async function saveOpp() {
+    const id       = document.getElementById('o-id').value;
+    const title    = document.getElementById('o-title').value.trim();
+    const type     = document.getElementById('o-type').value;
+    const location = document.getElementById('o-location').value.trim();
+    const desc     = document.getElementById('o-description').value.trim();
+    const skills   = splitList(document.getElementById('o-skills').value);
+    const needs    = splitList(document.getElementById('o-needs').value);
+
+    if (!title || !location) { toast('Veuillez remplir les champs obligatoires (titre, lieu)', 'error'); return; }
+
+    const body = { title, type, location, requiredSkills: skills, suitableForNeeds: needs };
+    if (desc) body.description = desc;
+
+    const btn = document.getElementById('o-save-btn');
+    btn.disabled = true; btn.textContent = '…';
+    try {
+      if (id) {
+        await apiFetch('PUT', '/admin/opportunities/' + id, body);
+        toast('Offre mise à jour avec succès ✓');
+      } else {
+        await apiFetch('POST', '/admin/opportunities', body);
+        toast('Offre ajoutée avec succès ✓');
+      }
+      closeOppModal();
+      loadOpportunities();
+    } catch (e) {
+      toast(e.message, 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Enregistrer';
+    }
+  }
+
+  function confirmDeleteOpp(id, title) {
+    document.getElementById('confirm-msg').textContent = `Êtes-vous sûr de vouloir supprimer l'offre "${title}" ?`;
+    _confirmCb = async () => {
+      try { await apiFetch('DELETE', '/admin/opportunities/' + id); toast('Offre supprimée'); closeConfirm(); loadOpportunities(); }
       catch (e) { toast(e.message, 'error'); }
     };
     document.getElementById('confirm-ok-btn').onclick = _confirmCb;

@@ -2,6 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { OpportunityEntity } from './entities/opportunity.entity';
+import {
+  CreateOpportunityDto,
+  UpdateOpportunityDto,
+} from './dto/create-opportunity.dto';
 import { SkillEntity } from '../skills/entities/skill.entity';
 import { NeedsAssessmentEntity } from '../needs/entities/needs-assessment.entity';
 import { QuestionnaireAnswerEntity } from '../questionnaire/entities/questionnaire-answer.entity';
@@ -26,6 +30,28 @@ export class OpportunitiesService {
 
   async findOne(id: string) {
     return this.opportunityRepo.findOneBy({ id }) ?? null;
+  }
+
+  // ── Admin CRUD ──────────────────────────────────
+  async create(dto: CreateOpportunityDto) {
+    const entity = this.opportunityRepo.create({
+      title: dto.title,
+      type: dto.type,
+      location: dto.location,
+      description: dto.description ?? null,
+      requiredSkills: dto.requiredSkills ?? [],
+      suitableForNeeds: dto.suitableForNeeds ?? [],
+    });
+    return this.opportunityRepo.save(entity);
+  }
+
+  async update(id: string, dto: UpdateOpportunityDto) {
+    await this.opportunityRepo.update(id, dto);
+    return this.opportunityRepo.findOneBy({ id });
+  }
+
+  async remove(id: string) {
+    await this.opportunityRepo.delete(id);
   }
 
   async matchForUser(userId: string) {

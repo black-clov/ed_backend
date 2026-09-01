@@ -18,5 +18,6 @@ import { QuestionnaireAnswerEntity } from '../questionnaire/entities/questionnai
   ],
   controllers: [OpportunitiesController],
   providers: [OpportunitiesService],
+  exports: [OpportunitiesService],
 })
 export class OpportunitiesModule {}

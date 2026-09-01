@@ -23,6 +23,7 @@ import { MentorConnectionEntity } from '../mentors/entities/mentor-connection.en
 import { AnalyticsEventEntity } from '../analytics/entities/analytics-event.entity';
 import { VideosModule } from '../videos/videos.module';
 import { ContentModule } from '../content/content.module';
+import { OpportunitiesModule } from '../opportunities/opportunities.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { ContentModule } from '../content/content.module';
     AnalyticsModule,
     VideosModule,
     ContentModule,
+    OpportunitiesModule,
     TypeOrmModule.forFeature([
       QuestionnaireAnswerEntity,
       CvEntity,

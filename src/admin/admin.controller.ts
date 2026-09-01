@@ -7,6 +7,11 @@ import { VideosService } from '../videos/videos.service';
 import { CreateVideoDto, UpdateVideoDto } from '../videos/dto/video-crud.dto';
 import { ContentService } from '../content/content.service';
 import { CreateContentDto, UpdateContentDto } from '../content/dto/content.dto';
+import { OpportunitiesService } from '../opportunities/opportunities.service';
+import {
+  CreateOpportunityDto,
+  UpdateOpportunityDto,
+} from '../opportunities/dto/create-opportunity.dto';
 
 @Controller('admin')
 @UseGuards(RolesGuard)
@@ -16,6 +21,7 @@ export class AdminController {
     private readonly adminService: AdminService,
     private readonly videosService: VideosService,
     private readonly contentService: ContentService,
+    private readonly opportunitiesService: OpportunitiesService,
   ) {}
 
   @Get('stats')
@@ -97,6 +103,31 @@ export class AdminController {
   @Delete('content/:id')
   async deleteContent(@Param('id') id: string) {
     await this.contentService.remove(id);
+    return { ok: true };
+  }
+
+  // ── Opportunities CRUD ──────────────────────────
+  @Get('opportunities')
+  async getOpportunities() {
+    return this.opportunitiesService.findAll();
+  }
+
+  @Post('opportunities')
+  async createOpportunity(@Body() dto: CreateOpportunityDto) {
+    return this.opportunitiesService.create(dto);
+  }
+
+  @Put('opportunities/:id')
+  async updateOpportunity(
+    @Param('id') id: string,
+    @Body() dto: UpdateOpportunityDto,
+  ) {
+    return this.opportunitiesService.update(id, dto);
+  }
+
+  @Delete('opportunities/:id')
+  async deleteOpportunity(@Param('id') id: string) {
+    await this.opportunitiesService.remove(id);
     return { ok: true };
   }
 }

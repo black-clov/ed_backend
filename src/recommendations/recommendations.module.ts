@@ -1,11 +1,10 @@
 import { Module } from '@nestjs/common';
 import { RecommendationsController } from './recommendations.controller';
 import { RecommendationsService } from './recommendations.service';
-import { SkillsModule } from '../skills/skills.module';
-import { BarriersModule } from '../barriers/barriers.module';
+import { OpportunitiesModule } from '../opportunities/opportunities.module';
 
 @Module({
-  imports: [SkillsModule, BarriersModule],
+  imports: [OpportunitiesModule],
   controllers: [RecommendationsController],
   providers: [RecommendationsService],
 })
