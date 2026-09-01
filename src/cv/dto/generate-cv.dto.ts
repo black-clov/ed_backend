@@ -1,4 +1,4 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsIn, IsOptional, IsString } from 'class-validator';
 
 export class GenerateCvDto {
   @IsOptional()
@@ -8,4 +8,9 @@ export class GenerateCvDto {
   @IsOptional()
   @IsString()
   headline?: string;
+
+  /** Output language of the CV: 'fr' (default) or 'ar'. */
+  @IsOptional()
+  @IsIn(['fr', 'ar'])
+  lang?: 'fr' | 'ar';
 }

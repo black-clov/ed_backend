@@ -1,9 +1,49 @@
 import { Injectable } from '@nestjs/common';
+import { join } from 'path';
+import { existsSync } from 'fs';
 import { GenerateCvDto } from './dto/generate-cv.dto';
 import { UsersService } from '../users/users.service';
 import { SkillsService } from '../skills/skills.service';
 import { QuestionnaireService } from '../questionnaire/questionnaire.service';
 import PDFDocument = require('pdfkit');
+
+const BRAND = '#C62828';
+const BRAND_LIGHT = '#FFEBEE';
+const TEXT = '#333333';
+const MUTED = '#999999';
+
+// Amiri Arabic font (shaped + RTL) shipped under backend/assets/fonts.
+const FONT_AR = join(process.cwd(), 'assets', 'fonts', 'Amiri-Regular.ttf');
+const FONT_AR_BOLD = join(process.cwd(), 'assets', 'fonts', 'Amiri-Bold.ttf');
+
+const LABELS = {
+  fr: {
+    headline: "Jeune à la recherche d'opportunités professionnelles",
+    fallbackName: 'Utilisateur Eidmaj',
+    contact: 'Coordonnées',
+    email: 'E-mail',
+    phone: 'Téléphone',
+    city: 'Ville',
+    level: "Niveau d'études",
+    skills: 'Compétences',
+    interests: "Centres d'intérêt",
+    prefs: 'Préférences de travail',
+    footer: "Généré par l'application Eidmaj",
+  },
+  ar: {
+    headline: 'شاب(ة) باحث(ة) عن فرص مهنية',
+    fallbackName: 'مستخدم إدماج',
+    contact: 'معلومات الاتصال',
+    email: 'البريد الإلكتروني',
+    phone: 'الهاتف',
+    city: 'المدينة',
+    level: 'المستوى الدراسي',
+    skills: 'المهارات',
+    interests: 'الاهتمامات',
+    prefs: 'تفضيلات العمل',
+    footer: 'تم إنشاؤه بواسطة تطبيق إدماج',
+  },
+};
 
 @Injectable()
 export class CvService {
@@ -38,112 +78,95 @@ export class CvService {
     const skills = await this.skillsService.getUserSkills(userId);
     const answers = await this.questionnaireService.getLatestAnswers(userId);
 
+    // Default to Arabic today (the app is Arabic); the frontend will pass the
+    // chosen language explicitly once the FR/AR switch is in place.
+    const lang: 'fr' | 'ar' = dto.lang === 'fr' ? 'fr' : 'ar';
+    const rtl = lang === 'ar';
+    const t = LABELS[lang];
+    // Use the embedded Arabic font for AR (proper shaping + RTL); Helvetica for FR.
+    const hasArFont = existsSync(FONT_AR);
+    const bodyFont = rtl && hasArFont ? 'body' : 'Helvetica';
+    const boldFont = rtl && hasArFont ? 'bold' : 'Helvetica-Bold';
+
     const fullName = profile
-      ? `${profile.first_name} ${profile.last_name}`
-      : 'مستخدم إدماج';
-    const headline =
-      dto.headline ?? 'شاب(ة) باحث(ة) عن فرص مهنية';
+      ? `${profile.first_name ?? ''} ${profile.last_name ?? ''}`.trim() || t.fallbackName
+      : t.fallbackName;
+    const headline = dto.headline ?? t.headline;
+
+    const pageW = 595.28;
+    const margin = 50;
+    const align: 'left' | 'right' = rtl ? 'right' : 'left';
+    const textOpts = { width: pageW - margin * 2, align } as const;
 
     return new Promise<Buffer>((resolve, reject) => {
-      const doc = new PDFDocument({ size: 'A4', margin: 50 });
+      const doc = new PDFDocument({ size: 'A4', margin });
+      if (rtl && hasArFont) {
+        doc.registerFont('body', FONT_AR);
+        doc.registerFont('bold', existsSync(FONT_AR_BOLD) ? FONT_AR_BOLD : FONT_AR);
+      }
       const chunks: Buffer[] = [];
-
       doc.on('data', (chunk: Buffer) => chunks.push(chunk));
       doc.on('end', () => resolve(Buffer.concat(chunks)));
       doc.on('error', (err: Error) => reject(err));
 
-      // Header
-      doc
-        .rect(0, 0, 595.28, 100)
-        .fill('#1565C0');
-
-      doc
-        .fontSize(28)
-        .fillColor('#FFFFFF')
-        .text(fullName, 50, 30, { align: 'left' });
-
-      doc
-        .fontSize(12)
-        .fillColor('#E3F2FD')
-        .text(headline, 50, 65, { align: 'left' });
+      // Header (brand red)
+      doc.rect(0, 0, pageW, 100).fill(BRAND);
+      doc.font(boldFont).fontSize(26).fillColor('#FFFFFF')
+        .text(fullName, margin, 28, textOpts);
+      doc.font(bodyFont).fontSize(12).fillColor(BRAND_LIGHT)
+        .text(headline, margin, 66, textOpts);
 
       let y = 120;
+      const line = (text: string, opts: { bold?: boolean; size?: number; color?: string; indent?: number } = {}) => {
+        doc.font(opts.bold ? boldFont : bodyFont)
+          .fontSize(opts.size ?? 11)
+          .fillColor(opts.color ?? TEXT)
+          .text(text, margin + (opts.indent ?? 0), y, { width: pageW - margin * 2 - (opts.indent ?? 0), align });
+        y += (opts.size ?? 11) + 7;
+      };
 
-      // Contact section
-      if (profile) {
-        doc.fillColor('#333333');
-        y = this.addSection(doc, 'معلومات الاتصال', y);
-        if (profile.email) {
-          doc.fontSize(11).text(`${profile.email} :البريد`, 50, y);
-          y += 18;
-        }
-        if (profile.telephone) {
-          doc.fontSize(11).text(`${profile.telephone} :الهاتف`, 50, y);
-          y += 18;
-        }
-        if (profile.ville) {
-          doc.fontSize(11).text(`${profile.ville} :المدينة`, 50, y);
-          y += 18;
-        }
-        if (profile.niveau_scolaire) {
-          doc.fontSize(11).text(`${profile.niveau_scolaire} :المستوى الدراسي`, 50, y);
-          y += 18;
-        }
+      const section = (title: string) => {
+        y += 6;
+        doc.font(boldFont).fontSize(14).fillColor(BRAND).text(title, margin, y, textOpts);
+        y += 20;
+        doc.moveTo(margin, y).lineTo(pageW - margin, y).strokeColor(BRAND).lineWidth(1).stroke();
         y += 10;
+      };
+
+      // Contact
+      if (profile) {
+        section(t.contact);
+        if (profile.email) line(`${t.email}: ${profile.email}`);
+        if (profile.telephone) line(`${t.phone}: ${profile.telephone}`);
+        if (profile.ville) line(`${t.city}: ${profile.ville}`);
+        if (profile.niveau_scolaire) line(`${t.level}: ${profile.niveau_scolaire}`);
       }
 
-      // Skills section
+      // Skills
       if (skills.length > 0) {
-        y = this.addSection(doc, 'المهارات', y);
-        for (const skill of skills) {
-          doc.fontSize(11).fillColor('#333333').text(`• ${skill}`, 60, y);
-          y += 18;
-        }
-        y += 10;
+        section(t.skills);
+        for (const skill of skills) line(`•  ${skill}`, { indent: 10 });
       }
 
       // Interests
       const interests = answers?.interests ?? [];
       if (interests.length > 0) {
-        y = this.addSection(doc, 'الاهتمامات', y);
-        doc.fontSize(11).fillColor('#333333').text(interests.join(' - '), 60, y);
-        y += 20;
+        section(t.interests);
+        line(interests.join('  -  '), { indent: 10 });
       }
 
       // Work preferences
       const prefs = answers?.workPreferences ?? [];
       if (prefs.length > 0) {
-        y = this.addSection(doc, 'تفضيلات العمل', y);
-        doc.fontSize(11).fillColor('#333333').text(prefs.join(' - '), 60, y);
-        y += 20;
+        section(t.prefs);
+        line(prefs.join('  -  '), { indent: 10 });
       }
 
       // Footer
-      const pageH = doc.page.height;
-      doc
-        .fontSize(9)
-        .fillColor('#999999')
-        .text('تم إنشاؤه بواسطة تطبيق إدماج - مؤسسة CDG', 50, pageH - 40, {
-          align: 'center',
-        });
+      doc.font(bodyFont).fontSize(9).fillColor(MUTED)
+        .text(t.footer, margin, doc.page.height - 40, { width: pageW - margin * 2, align: 'center' });
 
       doc.end();
     });
-  }
-
-  private addSection(doc: PDFKit.PDFDocument, title: string, y: number): number {
-    doc
-      .fontSize(14)
-      .fillColor('#1565C0')
-      .text(title, 50, y);
-    y += 20;
-    doc
-      .moveTo(50, y)
-      .lineTo(545.28, y)
-      .strokeColor('#1565C0')
-      .lineWidth(1)
-      .stroke();
-    y += 10;
-    return y;
   }
 }
