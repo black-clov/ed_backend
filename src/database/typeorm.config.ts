@@ -4,6 +4,7 @@ import { UserEntity } from '../users/entities/user.entity';
 import { QuestionnaireAnswerEntity } from '../questionnaire/entities/questionnaire-answer.entity';
 import { SkillEntity } from '../skills/entities/skill.entity';
 import { RecommendationEntity } from '../recommendations/entities/recommendation.entity';
+import { RecommendationItemEntity } from '../recommendations/entities/recommendation-item.entity';
 import { OpportunityEntity } from '../opportunities/entities/opportunity.entity';
 import { MentorEntity } from '../mentors/entities/mentor.entity';
 import { MentorConnectionEntity } from '../mentors/entities/mentor-connection.entity';
@@ -28,6 +29,7 @@ export const entities = [
   QuestionnaireAnswerEntity,
   SkillEntity,
   RecommendationEntity,
+  RecommendationItemEntity,
   OpportunityEntity,
   MentorEntity,
   MentorConnectionEntity,

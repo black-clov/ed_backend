@@ -162,6 +162,14 @@
       <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
       Offres
     </div>
+    <div class="nav-item" id="nav-recommendations" onclick="showPage('recommendations',this)">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 15 9 22 9 16 14 18 21 12 17 6 21 8 14 2 9 9 9"/></svg>
+      Recommandations
+    </div>
+    <div class="nav-item" id="nav-content" onclick="showPage('content',this)">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h11l5 5v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M14 4v5h5"/><line x1="7" y1="13" x2="17" y2="13"/><line x1="7" y1="17" x2="14" y2="17"/></svg>
+      Contenu &amp; articles
+    </div>
     <div class="nav-item" id="nav-users" onclick="showPage('users',this)">
       <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75M21 21v-2a4 4 0 0 0-3-3.85"/></svg>
       Utilisateurs
@@ -211,6 +219,38 @@
           <table>
             <thead><tr><th>Titre</th><th>Type</th><th>Lieu</th><th>Compétences requises</th><th>Actions</th></tr></thead>
             <tbody id="opps-body"><tr><td colspan="5" class="empty">Chargement…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="page-recommendations" class="page">
+      <h2 class="page-title">Recommandations</h2>
+      <div class="card">
+        <div class="card-header">
+          <h3 id="recs-count">Recommandations</h3>
+          <button class="btn btn-primary" onclick="openRecModal()">+ Ajouter une recommandation</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr><th>Titre</th><th>Description</th><th>Bouton</th><th>Publié</th><th>Ordre</th><th>Actions</th></tr></thead>
+            <tbody id="recs-body"><tr><td colspan="6" class="empty">Chargement…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="page-content" class="page">
+      <h2 class="page-title">Contenu &amp; articles</h2>
+      <div class="card">
+        <div class="card-header">
+          <h3 id="content-count">Contenu</h3>
+          <button class="btn btn-primary" onclick="openContentModal()">+ Ajouter un contenu</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr><th>Titre</th><th>Type</th><th>Catégorie</th><th>Fichier</th><th>Publié</th><th>Actions</th></tr></thead>
+            <tbody id="content-body"><tr><td colspan="6" class="empty">Chargement…</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -356,6 +396,106 @@
   </div>
 </div>
 
+<!-- RECOMMENDATION MODAL -->
+<div class="overlay" id="rec-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="rmodal-title">Ajouter une recommandation</h3>
+      <button class="modal-close" onclick="closeRecModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="r-id">
+
+      <label>Titre *</label>
+      <input type="text" id="r-title" placeholder="Titre de la recommandation">
+
+      <label>Description</label>
+      <textarea id="r-description" placeholder="Brève description"></textarea>
+
+      <div class="form-row">
+        <div>
+          <label>Texte du bouton</label>
+          <input type="text" id="r-actionLabel" placeholder="Découvrir">
+        </div>
+        <div>
+          <label>Lien du bouton (facultatif)</label>
+          <input type="url" id="r-actionUrl" placeholder="https://...">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label>Catégorie (facultatif)</label>
+          <input type="text" id="r-category" placeholder="emploi, formation…">
+        </div>
+        <div>
+          <label>Ordre</label>
+          <input type="number" id="r-order" placeholder="0" min="0">
+        </div>
+      </div>
+
+      <label style="display:flex;align-items:center;gap:8px;margin-top:10px">
+        <input type="checkbox" id="r-published" checked style="width:auto"> Publié (visible dans l'application)
+      </label>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeRecModal()">Annuler</button>
+      <button class="btn btn-primary" id="r-save-btn" onclick="saveRec()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONTENT MODAL -->
+<div class="overlay" id="content-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="cmodal-title">Ajouter un contenu</h3>
+      <button class="modal-close" onclick="closeContentModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="c-id">
+
+      <label>Titre *</label>
+      <input type="text" id="c-title" placeholder="Titre de l'article">
+
+      <div class="form-row">
+        <div>
+          <label>Type *</label>
+          <select id="c-type">
+            <option value="article">Article</option>
+            <option value="document">Document</option>
+            <option value="guide">Guide</option>
+          </select>
+        </div>
+        <div>
+          <label>Catégorie (facultatif)</label>
+          <input type="text" id="c-category" placeholder="emploi, entrepreneuriat…">
+        </div>
+      </div>
+
+      <label>Contenu / texte</label>
+      <textarea id="c-body" placeholder="Corps de l'article (facultatif si un fichier est joint)"></textarea>
+
+      <label>Lien du fichier (PDF, Google Drive… facultatif)</label>
+      <input type="url" id="c-fileUrl" placeholder="https://...">
+
+      <label>Lien de l'image (facultatif)</label>
+      <input type="url" id="c-imageUrl" placeholder="https://...">
+
+      <label>Ordre</label>
+      <input type="number" id="c-order" placeholder="0" min="0">
+
+      <label style="display:flex;align-items:center;gap:8px;margin-top:10px">
+        <input type="checkbox" id="c-published" checked style="width:auto"> Publié (visible dans l'application)
+      </label>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeContentModal()">Annuler</button>
+      <button class="btn btn-primary" id="c-save-btn" onclick="saveContent()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
 <!-- CONFIRM -->
 <div class="overlay" id="details-overlay">
   <div class="modal" style="max-width:720px">
@@ -419,6 +559,8 @@
     if (name === 'stats')  loadStats();
     if (name === 'videos') loadVideos();
     if (name === 'opportunities') loadOpportunities();
+    if (name === 'recommendations') loadRecs();
+    if (name === 'content') loadContent();
     if (name === 'users')  loadUsers();
   }
 
@@ -821,6 +963,190 @@
     document.getElementById('confirm-msg').textContent = `Êtes-vous sûr de vouloir supprimer l'offre "${title}" ?`;
     _confirmCb = async () => {
       try { await apiFetch('DELETE', '/admin/opportunities/' + id); toast('Offre supprimée'); closeConfirm(); loadOpportunities(); }
+      catch (e) { toast(e.message, 'error'); }
+    };
+    document.getElementById('confirm-ok-btn').onclick = _confirmCb;
+    document.getElementById('confirm-overlay').classList.add('open');
+  }
+
+  // ── recommandations ─────────────────────────────────────────────────
+  let recsData = [];
+
+  async function loadRecs() {
+    try {
+      recsData = await apiFetch('GET', '/admin/recommendations') ?? [];
+      document.getElementById('recs-count').textContent = `Recommandations (${recsData.length})`;
+      const tbody = document.getElementById('recs-body');
+      if (!recsData.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty">Aucune recommandation — ajoutez la première !</td></tr>'; return; }
+      tbody.innerHTML = recsData.map(r => `
+        <tr>
+          <td><div class="truncate" title="${esc(r.title)}">${esc(r.title)}</div></td>
+          <td style="font-size:.82rem;color:var(--muted)"><div class="truncate" title="${esc(r.description??'')}">${esc(r.description??'') || '—'}</div></td>
+          <td>${esc(r.actionLabel??'') || '—'}</td>
+          <td>${r.published ? '✅' : '—'}</td>
+          <td>${r.order??0}</td>
+          <td><div class="action-btns">
+            <button class="icon-btn icon-btn-edit" onclick="editRec('${esc(r.id)}')" title="Modifier">✏️</button>
+            <button class="icon-btn icon-btn-delete" onclick="confirmDeleteRec('${esc(r.id)}','${esc(r.title)}')" title="Supprimer">🗑️</button>
+          </div></td>
+        </tr>`).join('');
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
+  function openRecModal() {
+    document.getElementById('rmodal-title').textContent = 'Ajouter une recommandation';
+    document.getElementById('r-id').value = '';
+    document.getElementById('r-title').value = '';
+    document.getElementById('r-description').value = '';
+    document.getElementById('r-actionLabel').value = '';
+    document.getElementById('r-actionUrl').value = '';
+    document.getElementById('r-category').value = '';
+    document.getElementById('r-order').value = '';
+    document.getElementById('r-published').checked = true;
+    document.getElementById('rec-overlay').classList.add('open');
+  }
+
+  function editRec(id) {
+    const r = recsData.find(x => String(x.id) === String(id));
+    if (!r) return;
+    document.getElementById('rmodal-title').textContent = 'Modifier la recommandation';
+    document.getElementById('r-id').value = r.id;
+    document.getElementById('r-title').value = r.title ?? '';
+    document.getElementById('r-description').value = r.description ?? '';
+    document.getElementById('r-actionLabel').value = r.actionLabel ?? '';
+    document.getElementById('r-actionUrl').value = r.actionUrl ?? '';
+    document.getElementById('r-category').value = r.category ?? '';
+    document.getElementById('r-order').value = r.order ?? 0;
+    document.getElementById('r-published').checked = r.published !== false;
+    document.getElementById('rec-overlay').classList.add('open');
+  }
+
+  function closeRecModal() { document.getElementById('rec-overlay').classList.remove('open'); }
+
+  async function saveRec() {
+    const id    = document.getElementById('r-id').value;
+    const title = document.getElementById('r-title').value.trim();
+    if (!title) { toast('Veuillez saisir un titre', 'error'); return; }
+    const body = {
+      title,
+      description: document.getElementById('r-description').value.trim(),
+      actionLabel: document.getElementById('r-actionLabel').value.trim(),
+      actionUrl: document.getElementById('r-actionUrl').value.trim(),
+      category: document.getElementById('r-category').value.trim(),
+      published: document.getElementById('r-published').checked,
+    };
+    const ord = document.getElementById('r-order').value;
+    if (ord !== '') body.order = parseInt(ord);
+
+    const btn = document.getElementById('r-save-btn');
+    btn.disabled = true; btn.textContent = '…';
+    try {
+      if (id) { await apiFetch('PUT', '/admin/recommendations/' + id, body); toast('Recommandation mise à jour ✓'); }
+      else    { await apiFetch('POST', '/admin/recommendations', body); toast('Recommandation ajoutée ✓'); }
+      closeRecModal();
+      loadRecs();
+    } catch (e) { toast(e.message, 'error'); }
+    finally { btn.disabled = false; btn.textContent = 'Enregistrer'; }
+  }
+
+  function confirmDeleteRec(id, title) {
+    document.getElementById('confirm-msg').textContent = `Êtes-vous sûr de vouloir supprimer la recommandation "${title}" ?`;
+    _confirmCb = async () => {
+      try { await apiFetch('DELETE', '/admin/recommendations/' + id); toast('Recommandation supprimée'); closeConfirm(); loadRecs(); }
+      catch (e) { toast(e.message, 'error'); }
+    };
+    document.getElementById('confirm-ok-btn').onclick = _confirmCb;
+    document.getElementById('confirm-overlay').classList.add('open');
+  }
+
+  // ── contenu & articles ──────────────────────────────────────────────
+  let contentData = [];
+  const contentTypeLbl = { article: 'Article', document: 'Document', guide: 'Guide' };
+
+  async function loadContent() {
+    try {
+      contentData = await apiFetch('GET', '/admin/content') ?? [];
+      document.getElementById('content-count').textContent = `Contenu (${contentData.length})`;
+      const tbody = document.getElementById('content-body');
+      if (!contentData.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty">Aucun contenu — ajoutez le premier article !</td></tr>'; return; }
+      tbody.innerHTML = contentData.map(c => `
+        <tr>
+          <td><div class="truncate" title="${esc(c.title)}">${esc(c.title)}</div></td>
+          <td><span class="badge badge-cat">${esc(contentTypeLbl[c.type]??c.type)}</span></td>
+          <td>${esc(c.category??'') || '—'}</td>
+          <td>${c.fileUrl ? `<a href="${esc(c.fileUrl)}" target="_blank" rel="noopener" style="color:var(--indigo-light);font-size:.82rem">Fichier ↗</a>` : '—'}</td>
+          <td>${c.published ? '✅' : '—'}</td>
+          <td><div class="action-btns">
+            <button class="icon-btn icon-btn-edit" onclick="editContent('${esc(c.id)}')" title="Modifier">✏️</button>
+            <button class="icon-btn icon-btn-delete" onclick="confirmDeleteContent('${esc(c.id)}','${esc(c.title)}')" title="Supprimer">🗑️</button>
+          </div></td>
+        </tr>`).join('');
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
+  function openContentModal() {
+    document.getElementById('cmodal-title').textContent = 'Ajouter un contenu';
+    document.getElementById('c-id').value = '';
+    document.getElementById('c-title').value = '';
+    document.getElementById('c-type').value = 'article';
+    document.getElementById('c-category').value = '';
+    document.getElementById('c-body').value = '';
+    document.getElementById('c-fileUrl').value = '';
+    document.getElementById('c-imageUrl').value = '';
+    document.getElementById('c-order').value = '';
+    document.getElementById('c-published').checked = true;
+    document.getElementById('content-overlay').classList.add('open');
+  }
+
+  function editContent(id) {
+    const c = contentData.find(x => String(x.id) === String(id));
+    if (!c) return;
+    document.getElementById('cmodal-title').textContent = 'Modifier le contenu';
+    document.getElementById('c-id').value = c.id;
+    document.getElementById('c-title').value = c.title ?? '';
+    document.getElementById('c-type').value = c.type ?? 'article';
+    document.getElementById('c-category').value = c.category ?? '';
+    document.getElementById('c-body').value = c.body ?? '';
+    document.getElementById('c-fileUrl').value = c.fileUrl ?? '';
+    document.getElementById('c-imageUrl').value = c.imageUrl ?? '';
+    document.getElementById('c-order').value = c.order ?? 0;
+    document.getElementById('c-published').checked = c.published !== false;
+    document.getElementById('content-overlay').classList.add('open');
+  }
+
+  function closeContentModal() { document.getElementById('content-overlay').classList.remove('open'); }
+
+  async function saveContent() {
+    const id    = document.getElementById('c-id').value;
+    const title = document.getElementById('c-title').value.trim();
+    if (!title) { toast('Veuillez saisir un titre', 'error'); return; }
+    const body = {
+      title,
+      type: document.getElementById('c-type').value,
+      category: document.getElementById('c-category').value.trim(),
+      body: document.getElementById('c-body').value.trim(),
+      fileUrl: document.getElementById('c-fileUrl').value.trim(),
+      imageUrl: document.getElementById('c-imageUrl').value.trim(),
+      published: document.getElementById('c-published').checked,
+    };
+    const ord = document.getElementById('c-order').value;
+    if (ord !== '') body.order = parseInt(ord);
+
+    const btn = document.getElementById('c-save-btn');
+    btn.disabled = true; btn.textContent = '…';
+    try {
+      if (id) { await apiFetch('PUT', '/admin/content/' + id, body); toast('Contenu mis à jour ✓'); }
+      else    { await apiFetch('POST', '/admin/content', body); toast('Contenu ajouté ✓'); }
+      closeContentModal();
+      loadContent();
+    } catch (e) { toast(e.message, 'error'); }
+    finally { btn.disabled = false; btn.textContent = 'Enregistrer'; }
+  }
+
+  function confirmDeleteContent(id, title) {
+    document.getElementById('confirm-msg').textContent = `Êtes-vous sûr de vouloir supprimer "${title}" ?`;
+    _confirmCb = async () => {
+      try { await apiFetch('DELETE', '/admin/content/' + id); toast('Contenu supprimé'); closeConfirm(); loadContent(); }
       catch (e) { toast(e.message, 'error'); }
     };
     document.getElementById('confirm-ok-btn').onclick = _confirmCb;

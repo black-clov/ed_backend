@@ -24,6 +24,7 @@ import { AnalyticsEventEntity } from '../analytics/entities/analytics-event.enti
 import { VideosModule } from '../videos/videos.module';
 import { ContentModule } from '../content/content.module';
 import { OpportunitiesModule } from '../opportunities/opportunities.module';
+import { RecommendationsModule } from '../recommendations/recommendations.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { OpportunitiesModule } from '../opportunities/opportunities.module';
     VideosModule,
     ContentModule,
     OpportunitiesModule,
+    RecommendationsModule,
     TypeOrmModule.forFeature([
       QuestionnaireAnswerEntity,
       CvEntity,

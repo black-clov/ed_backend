@@ -12,6 +12,11 @@ import {
   CreateOpportunityDto,
   UpdateOpportunityDto,
 } from '../opportunities/dto/create-opportunity.dto';
+import { RecommendationsService } from '../recommendations/recommendations.service';
+import {
+  CreateRecommendationItemDto,
+  UpdateRecommendationItemDto,
+} from '../recommendations/dto/recommendation-item.dto';
 
 @Controller('admin')
 @UseGuards(RolesGuard)
@@ -22,6 +27,7 @@ export class AdminController {
     private readonly videosService: VideosService,
     private readonly contentService: ContentService,
     private readonly opportunitiesService: OpportunitiesService,
+    private readonly recommendationsService: RecommendationsService,
   ) {}
 
   @Get('stats')
@@ -128,6 +134,31 @@ export class AdminController {
   @Delete('opportunities/:id')
   async deleteOpportunity(@Param('id') id: string) {
     await this.opportunitiesService.remove(id);
+    return { ok: true };
+  }
+
+  // ── Recommendations CRUD ────────────────────────
+  @Get('recommendations')
+  async getRecommendations() {
+    return this.recommendationsService.findAllAdmin();
+  }
+
+  @Post('recommendations')
+  async createRecommendation(@Body() dto: CreateRecommendationItemDto) {
+    return this.recommendationsService.create(dto);
+  }
+
+  @Put('recommendations/:id')
+  async updateRecommendation(
+    @Param('id') id: string,
+    @Body() dto: UpdateRecommendationItemDto,
+  ) {
+    return this.recommendationsService.update(id, dto);
+  }
+
+  @Delete('recommendations/:id')
+  async deleteRecommendation(@Param('id') id: string) {
+    await this.recommendationsService.remove(id);
     return { ok: true };
   }
 }
