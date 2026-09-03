@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../users/users.service';
 import { MailService } from '../mail/mail.service';
@@ -7,8 +7,6 @@ import * as crypto from 'crypto';
 
 @Injectable()
 export class AuthService {
-	private readonly logger = new Logger(AuthService.name);
-
 	constructor(
 		private readonly usersService: UsersService,
 		private readonly configService: ConfigService,
@@ -86,23 +84,18 @@ export class AuthService {
 		picture?: string;
 	}> {
 		try {
-			this.logger.log(`[GoogleAuth] received idToken length=${idToken?.length ?? 0}`);
 			// Verify the token with Google's tokeninfo endpoint
 			const response = await fetch(
 				`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`,
 			);
 			if (!response.ok) {
-				const bodyText = await response.text().catch(() => '');
-				this.logger.warn(`[GoogleAuth] tokeninfo failed status=${response.status} body=${bodyText}`);
 				throw new UnauthorizedException('Invalid Google token');
 			}
 			const payload = await response.json();
 
 			// Verify the audience matches our client ID
 			const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
-			this.logger.log(`[GoogleAuth] token.aud=${payload.aud} expected(GOOGLE_CLIENT_ID)=${clientId ?? '(unset)'} email=${payload.email ?? '(none)'}`);
 			if (clientId && payload.aud !== clientId) {
-				this.logger.warn(`[GoogleAuth] AUDIENCE MISMATCH: token.aud=${payload.aud} != GOOGLE_CLIENT_ID=${clientId}`);
 				throw new UnauthorizedException('Token audience mismatch');
 			}
 
