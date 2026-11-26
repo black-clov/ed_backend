@@ -174,6 +174,10 @@
       <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75M21 21v-2a4 4 0 0 0-3-3.85"/></svg>
       Utilisateurs
     </div>
+    <div class="nav-item" id="nav-about" onclick="showPage('about',this)">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      À propos
+    </div>
     <div class="sidebar-foot">
       <button onclick="logout()">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -262,9 +266,33 @@
         <div class="card-header"><h3 id="users-count">Utilisateurs</h3></div>
         <div style="overflow-x:auto">
           <table>
-            <thead><tr><th>Nom</th><th>E-mail</th><th>Ville</th><th>Rôle</th><th>Actions</th></tr></thead>
-            <tbody id="users-body"><tr><td colspan="5" class="empty">Chargement…</td></tr></tbody>
+            <thead><tr><th>Nom</th><th>E-mail</th><th>Ville</th><th>Genre</th><th>Parcours</th><th>Rôle</th><th>Actions</th></tr></thead>
+            <tbody id="users-body"><tr><td colspan="7" class="empty">Chargement…</td></tr></tbody>
           </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="page-about" class="page">
+      <h2 class="page-title">À propos</h2>
+      <div class="card">
+        <div class="card-header">
+          <h3>Page « À propos » de l’application</h3>
+          <button class="btn btn-primary" id="about-save-btn" onclick="saveAbout()">Enregistrer</button>
+        </div>
+        <div style="padding:4px 20px 22px;max-width:760px">
+          <p style="color:var(--muted);font-size:.85rem;margin-top:14px">Ce texte et ces liens s’affichent dans l’application, dans la page « À propos ». Les modifications sont visibles immédiatement.</p>
+          <label>Présentation (français)</label>
+          <textarea id="about-desc-fr" rows="6" placeholder="Eidmaj est une application de l’Association Jeunes pour Jeunes…"></textarea>
+          <label>Présentation (arabe)</label>
+          <textarea id="about-desc-ar" rows="6" dir="rtl" placeholder="إدماج تطبيق من جمعية شباب من أجل الشباب…"></textarea>
+          <div class="form-row">
+            <div><label>E-mail de contact</label><input type="text" id="about-email" placeholder="contact@e-idmaj.ma"></div>
+            <div><label>Téléphone de contact</label><input type="text" id="about-phone" placeholder="+212 …"></div>
+          </div>
+          <label>Liens (Facebook, Instagram, site web…)</label>
+          <div id="about-links"></div>
+          <button class="btn btn-ghost" style="margin-top:10px;font-size:.82rem" onclick="addAboutLink()">+ Ajouter un lien</button>
         </div>
       </div>
     </div>
@@ -562,6 +590,7 @@
     if (name === 'recommendations') loadRecs();
     if (name === 'content') loadContent();
     if (name === 'users')  loadUsers();
+    if (name === 'about')  loadAbout();
   }
 
   // ── auth ────────────────────────────────────────────────────────────
@@ -837,12 +866,14 @@
       const users = await apiFetch('GET', '/admin/users') ?? [];
       document.getElementById('users-count').textContent = `Utilisateurs (${users.length})`;
       const tbody = document.getElementById('users-body');
-      if (!users.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty">Aucun utilisateur</td></tr>'; return; }
+      if (!users.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty">Aucun utilisateur</td></tr>'; return; }
       tbody.innerHTML = users.map(u => `
         <tr>
           <td>${esc(((u.first_name??'') + ' ' + (u.last_name??'')).trim()) || '—'}</td>
           <td style="font-size:.82rem;color:var(--muted)">${esc(u.email??'')}</td>
           <td>${esc(u.ville??'—')}</td>
+          <td>${esc(GENDER_LBL[u.gender] ?? '—')}</td>
+          <td>${esc(TRACK_LBL[u.track] ?? '—')}</td>
           <td><span class="badge ${u.role==='admin'?'badge-admin':'badge-user'}">${u.role==='admin'?'Administrateur':'Utilisateur'}</span></td>
           <td><div class="action-btns">
             <button class="btn btn-ghost" style="font-size:.78rem;padding:5px 10px" onclick="showUserDetails('${u.id}')">Détails</button>
@@ -853,6 +884,58 @@
           </div></td>
         </tr>`).join('');
     } catch (e) { toast(e.message, 'error'); }
+  }
+
+  const GENDER_LBL = { boy: 'Garçon', girl: 'Fille' };
+  const TRACK_LBL  = { employment: 'Emploi', entrepreneurship: 'Entrepreneuriat', both: 'Les deux' };
+
+  // ── à propos ────────────────────────────────────────────────────────
+  function aboutLinkRow(label = '', url = '') {
+    const row = document.createElement('div');
+    row.className = 'about-link-row';
+    row.style.cssText = 'display:flex;gap:8px;margin-top:8px;align-items:center';
+    row.innerHTML = `
+      <input type="text" class="al-label" placeholder="Facebook" style="flex:1" value="${esc(label)}">
+      <input type="url" class="al-url" placeholder="https://facebook.com/…" style="flex:2" value="${esc(url)}">
+      <button class="icon-btn icon-btn-delete" title="Supprimer">🗑️</button>`;
+    row.querySelector('button').onclick = () => row.remove();
+    return row;
+  }
+  function addAboutLink() { document.getElementById('about-links').appendChild(aboutLinkRow()); }
+
+  async function loadAbout() {
+    try {
+      const a = await apiFetch('GET', '/admin/about') ?? {};
+      document.getElementById('about-desc-fr').value = a.descriptionFr ?? '';
+      document.getElementById('about-desc-ar').value = a.descriptionAr ?? '';
+      document.getElementById('about-email').value = a.contactEmail ?? '';
+      document.getElementById('about-phone').value = a.contactPhone ?? '';
+      const box = document.getElementById('about-links');
+      box.innerHTML = '';
+      (a.links ?? []).forEach(l => box.appendChild(aboutLinkRow(l.label, l.url)));
+      if (!(a.links ?? []).length) box.appendChild(aboutLinkRow());
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
+  async function saveAbout() {
+    const links = [...document.querySelectorAll('#about-links .about-link-row')]
+      .map(r => ({ label: r.querySelector('.al-label').value.trim(), url: r.querySelector('.al-url').value.trim() }))
+      .filter(l => l.label || l.url);
+    const bad = links.find(l => !l.label || !/^https?:\/\//i.test(l.url));
+    if (bad) { toast('Chaque lien doit avoir un nom et une adresse commençant par https://', 'error'); return; }
+    const btn = document.getElementById('about-save-btn');
+    btn.disabled = true;
+    try {
+      await apiFetch('PUT', '/admin/about', {
+        descriptionFr: document.getElementById('about-desc-fr').value.trim(),
+        descriptionAr: document.getElementById('about-desc-ar').value.trim(),
+        contactEmail: document.getElementById('about-email').value.trim(),
+        contactPhone: document.getElementById('about-phone').value.trim(),
+        links,
+      });
+      toast('Page « À propos » enregistrée');
+    } catch (e) { toast(e.message, 'error'); }
+    finally { btn.disabled = false; }
   }
 
   async function changeRole(id, role) {
@@ -1217,7 +1300,7 @@
       let html = '';
       // Profil
       html += '<div style="margin-bottom:18px"><h4 style="margin:0 0 8px;color:var(--text)">Profil</h4>' +
-        renderValue({ email: u.email, ville: u.ville, role: u.role, genre: u.gender, téléphone: u.phone }) + '</div>';
+        renderValue({ email: u.email, ville: u.ville, role: u.role, genre: GENDER_LBL[u.gender] ?? null, parcours: TRACK_LBL[u.track] ?? null, téléphone: u.telephone }) + '</div>';
       const sections = data.sections || {};
       Object.keys(SECTION_LABELS).forEach(key => {
         const label = SECTION_LABELS[key];

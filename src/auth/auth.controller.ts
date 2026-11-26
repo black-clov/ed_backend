@@ -30,7 +30,13 @@ export class AuthController {
     }
     const payload = { email: user.email, sub: user.id, role: user.role };
     const access_token = this.jwtService.sign(payload);
-    return { access_token, userId: user.id, role: user.role };
+    return {
+      access_token,
+      userId: user.id,
+      role: user.role,
+      gender: user.gender ?? null,
+      track: user.track ?? null,
+    };
   }
 
   @Public()
@@ -73,6 +79,12 @@ export class AuthController {
     // Issue JWT
     const payload = { email: user.email, sub: user.id, role: user.role };
     const access_token = this.jwtService.sign(payload);
-    return { access_token, userId: user.id, role: user.role };
+    return {
+      access_token,
+      userId: user.id,
+      role: user.role,
+      gender: (user as any).gender ?? null,
+      track: (user as any).track ?? null,
+    };
   }
 }

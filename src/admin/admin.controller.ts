@@ -17,6 +17,8 @@ import {
   CreateRecommendationItemDto,
   UpdateRecommendationItemDto,
 } from '../recommendations/dto/recommendation-item.dto';
+import { SettingsService } from '../settings/settings.service';
+import { UpdateAboutDto } from '../settings/dto/about.dto';
 
 @Controller('admin')
 @UseGuards(RolesGuard)
@@ -28,7 +30,19 @@ export class AdminController {
     private readonly contentService: ContentService,
     private readonly opportunitiesService: OpportunitiesService,
     private readonly recommendationsService: RecommendationsService,
+    private readonly settingsService: SettingsService,
   ) {}
+
+  // ── "À propos" page ─────────────────────────────
+  @Get('about')
+  async getAbout() {
+    return this.settingsService.getAbout();
+  }
+
+  @Put('about')
+  async updateAbout(@Body() dto: UpdateAboutDto) {
+    return this.settingsService.updateAbout(dto);
+  }
 
   @Get('stats')
   async getStats() {

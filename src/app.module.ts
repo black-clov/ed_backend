@@ -32,6 +32,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { AnalyticsInterceptor } from './analytics/analytics.interceptor';
 import { AdminModule } from './admin/admin.module';
 import { ContentModule } from './content/content.module';
+import { SettingsModule } from './settings/settings.module';
 import { getTypeOrmConfig } from './database/typeorm.config';
 
 
@@ -72,6 +73,7 @@ import { getTypeOrmConfig } from './database/typeorm.config';
     AnalyticsModule,
     AdminModule,
     ContentModule,
+    SettingsModule,
   ],
   controllers: [AppController],
   providers: [

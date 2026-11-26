@@ -1,14 +1,15 @@
 
-import { Injectable, ConflictException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { Injectable, ConflictException, InternalServerErrorException, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserEntity } from './entities/user.entity';
 import * as bcrypt from 'bcryptjs';
+import { UpdatePreferencesDto } from './dto/update-preferences.dto';
 
 @Injectable()
-export class UsersService {
+export class UsersService implements OnModuleInit {
     async findByEmail(email: string) {
       return this.usersRepo.findOne({ where: { email } });
     }
@@ -17,6 +18,41 @@ export class UsersService {
     private readonly usersRepo: Repository<UserEntity>,
     private readonly dataSource: DataSource,
   ) {}
+
+  /**
+   * Add the gender/track columns in environments where TYPEORM_SYNC is off and
+   * no migration step runs on deploy. Idempotent and additive (nullable columns).
+   */
+  async onModuleInit(): Promise<void> {
+    try {
+      await this.dataSource.query(
+        `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "gender" varchar(10)`,
+      );
+      await this.dataSource.query(
+        `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "track" varchar(20)`,
+      );
+    } catch {
+      // Non-fatal: columns are expected to exist already if DDL is not allowed.
+    }
+  }
+
+  async getPreferences(userId: string) {
+    const u = await this.usersRepo.findOne({
+      where: { id: userId },
+      select: ['id', 'gender', 'track'],
+    });
+    if (!u) throw new NotFoundException('User not found');
+    return { gender: u.gender, track: u.track };
+  }
+
+  async updatePreferences(userId: string, dto: UpdatePreferencesDto) {
+    const u = await this.usersRepo.findOne({ where: { id: userId } });
+    if (!u) throw new NotFoundException('User not found');
+    if (dto.gender !== undefined) u.gender = dto.gender;
+    if (dto.track !== undefined) u.track = dto.track;
+    await this.usersRepo.save(u);
+    return { gender: u.gender, track: u.track };
+  }
 
   /**
    * Every table that stores rows keyed by `user_id`. Deleting an account must
@@ -90,7 +126,7 @@ export class UsersService {
   }
 
   async findAll() {
-    const users = await this.usersRepo.find({ select: ['id', 'email', 'firstName', 'lastName', 'age', 'ville', 'niveauScolaire', 'telephone', 'role'] });
+    const users = await this.usersRepo.find({ select: ['id', 'email', 'firstName', 'lastName', 'age', 'ville', 'niveauScolaire', 'telephone', 'role', 'gender', 'track'] });
     return users.map(u => ({
       id: u.id,
       email: u.email,
@@ -101,11 +137,13 @@ export class UsersService {
       niveau_scolaire: u.niveauScolaire,
       telephone: u.telephone,
       role: u.role,
+      gender: u.gender,
+      track: u.track,
     }));
   }
 
   async findOne(id: string) {
-    const u = await this.usersRepo.findOne({ where: { id }, select: ['id', 'email', 'firstName', 'lastName', 'age', 'ville', 'niveauScolaire', 'telephone', 'role'] });
+    const u = await this.usersRepo.findOne({ where: { id }, select: ['id', 'email', 'firstName', 'lastName', 'age', 'ville', 'niveauScolaire', 'telephone', 'role', 'gender', 'track'] });
     if (!u) return null;
     return {
       id: u.id,
@@ -117,6 +155,8 @@ export class UsersService {
       niveau_scolaire: u.niveauScolaire,
       telephone: u.telephone,
       role: u.role,
+      gender: u.gender,
+      track: u.track,
     };
   }
 

@@ -25,6 +25,7 @@ import { VideosModule } from '../videos/videos.module';
 import { ContentModule } from '../content/content.module';
 import { OpportunitiesModule } from '../opportunities/opportunities.module';
 import { RecommendationsModule } from '../recommendations/recommendations.module';
+import { SettingsModule } from '../settings/settings.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { RecommendationsModule } from '../recommendations/recommendations.module
     ContentModule,
     OpportunitiesModule,
     RecommendationsModule,
+    SettingsModule,
     TypeOrmModule.forFeature([
       QuestionnaireAnswerEntity,
       CvEntity,

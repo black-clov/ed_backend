@@ -47,4 +47,12 @@ export class UserEntity {
 
   @Column({ name: 'reset_token_expires', type: 'timestamp', nullable: true })
   resetTokenExpires!: Date | null;
+
+  /** 'boy' | 'girl' | null (not specified). Drives the mascot only. */
+  @Column({ type: 'varchar', length: 10, nullable: true })
+  gender!: string | null;
+
+  /** 'employment' | 'entrepreneurship' | 'both' | null (not chosen yet). */
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  track!: string | null;
 }

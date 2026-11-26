@@ -1,7 +1,10 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Req, Res, HttpStatus } from '@nestjs/common';
+import { Body, Controller, Delete, ForbiddenException, Get, Param, Patch, Post, Put, Req, Res, HttpStatus, UseGuards } from '@nestjs/common';
+import { Roles } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
 import type { Request, Response } from 'express';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdatePreferencesDto } from './dto/update-preferences.dto';
 import { UsersService } from './users.service';
 import { Public } from '../auth/public.decorator';
 
@@ -9,13 +12,39 @@ import { Public } from '../auth/public.decorator';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  /** The authenticated user's own gender (mascot) and chosen track. */
+  @Get('me/preferences')
+  getMyPreferences(@Req() req: Request) {
+    return this.usersService.getPreferences((req as any).user?.sub as string);
+  }
+
+  @Patch('me/preferences')
+  updateMyPreferences(@Req() req: Request, @Body() dto: UpdatePreferencesDto) {
+    return this.usersService.updatePreferences((req as any).user?.sub as string, dto);
+  }
+
+  /**
+   * Only the account owner or an admin may read/edit a profile by id.
+   * (Before this check any logged-in user could read or modify any profile.)
+   */
+  private assertSelfOrAdmin(req: Request, id: string) {
+    const user = (req as any).user as { sub?: string; role?: string } | undefined;
+    if (!user || (user.sub !== id && user.role !== 'admin')) {
+      throw new ForbiddenException('You can only access your own account');
+    }
+  }
+
+  /** Full user list (emails, phones): admins only. */
   @Get()
+  @UseGuards(RolesGuard)
+  @Roles('admin')
   findAll() {
     return this.usersService.findAll();
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string, @Req() req: Request) {
+    this.assertSelfOrAdmin(req, id);
     return await this.usersService.findOne(id);
   }
 
@@ -37,7 +66,8 @@ export class UsersController {
   }
 
   @Put(':id')
-  async update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
+  async update(@Param('id') id: string, @Body() dto: UpdateUserDto, @Req() req: Request) {
+    this.assertSelfOrAdmin(req, id);
     return this.usersService.update(id, dto);
   }
 
