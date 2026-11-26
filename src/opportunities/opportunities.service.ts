@@ -9,6 +9,14 @@ import {
 import { SkillEntity } from '../skills/entities/skill.entity';
 import { NeedsAssessmentEntity } from '../needs/entities/needs-assessment.entity';
 import { QuestionnaireAnswerEntity } from '../questionnaire/entities/questionnaire-answer.entity';
+import {
+  NEED_TAGS,
+  NEEDS_BY_TYPE,
+  SKILL_TAGS,
+  Tag,
+  tagById,
+  toTagIds,
+} from './matching';
 
 @Injectable()
 export class OpportunitiesService {
@@ -54,79 +62,88 @@ export class OpportunitiesService {
     await this.opportunityRepo.delete(id);
   }
 
-  async matchForUser(userId: string) {
-    const [allOpportunities, userSkills, needsRow, questionnaire] =
-      await Promise.all([
-        this.opportunityRepo.find(),
-        this.skillRepo.find({ where: { userId } }),
-        this.needsRepo.findOne({ where: { userId }, order: { createdAt: 'DESC' } }),
-        this.questionnaireRepo.findOne({ where: { userId } }),
-      ]);
+  /** Checkbox lists for the admin panel (same vocabulary as the app). */
+  getTagOptions() {
+    const pick = (vocab: Tag[]) => vocab.map(({ id, fr, ar }) => ({ id, fr, ar }));
+    return { skills: pick(SKILL_TAGS), needs: pick(NEED_TAGS) };
+  }
 
-    const userSkillNames = userSkills.map((s) => s.name.toLowerCase());
-    const userNeeds = (needsRow?.needs ?? []).map((n) => n.toLowerCase());
-    const userInterests = (questionnaire?.interests ?? []).map((i) =>
-      i.toLowerCase(),
-    );
+  /**
+   * Rank offers for one young person.
+   *
+   * Skills and needs are both mapped to canonical tags (see matching.ts), so
+   * the app's Arabic skill labels / need keys and the admin's French words or
+   * checkboxes are compared on the same terms. The offer type also counts as
+   * a need it answers (job → find a job, internship → practice, training →
+   * learning). With no skills and no needs on the profile there is nothing to
+   * compare: every offer gets 0 (the app then shows no percentage) instead of
+   * the old misleading flat 10%.
+   */
+  async matchForUser(userId: string) {
+    const [allOpportunities, userSkills, needsRow] = await Promise.all([
+      this.opportunityRepo.find(),
+      this.skillRepo.find({ where: { userId } }),
+      this.needsRepo.findOne({ where: { userId }, order: { createdAt: 'DESC' } }),
+    ]);
+
+    const userSkillTags = toTagIds(userSkills.map((s) => s.name), SKILL_TAGS);
+    const userNeedTags = toTagIds(needsRow?.needs ?? [], NEED_TAGS);
+    const profileEmpty = userSkillTags.size === 0 && userNeedTags.size === 0;
+
+    const SKILL_WEIGHT = 55;
+    const NEED_WEIGHT = 45;
 
     const scored = allOpportunities.map((opp) => {
+      const reasonsFr: string[] = [];
+      const reasonsAr: string[] = [];
       let score = 0;
       let maxScore = 0;
-      const reasons: string[] = [];
 
-      // Skill match (weight: 40%)
-      const reqSkills = opp.requiredSkills ?? [];
-      if (reqSkills.length > 0) {
-        maxScore += 40;
-        const matched = reqSkills.filter((rs) =>
-          userSkillNames.some(
-            (us) => us.includes(rs.toLowerCase()) || rs.toLowerCase().includes(us),
-          ),
-        );
-        const skillScore = Math.round((matched.length / reqSkills.length) * 40);
-        score += skillScore;
-        if (matched.length > 0) {
-          reasons.push(`مهارات متطابقة: ${matched.join('، ')}`);
+      if (!profileEmpty) {
+        // Skills: share of the offer's required skills the person has.
+        // Only counted when the person filled in their skills — otherwise a
+        // "needs only" profile would be pulled down on every offer.
+        const reqSkills = toTagIds(opp.requiredSkills, SKILL_TAGS);
+        if (reqSkills.size > 0 && userSkillTags.size > 0) {
+          maxScore += SKILL_WEIGHT;
+          const matched = [...reqSkills].filter((t) => userSkillTags.has(t));
+          score += (matched.length / reqSkills.size) * SKILL_WEIGHT;
+          for (const id of matched) {
+            const t = tagById(SKILL_TAGS, id)!;
+            reasonsFr.push(t.fr);
+            reasonsAr.push(t.ar);
+          }
+        }
+
+        // Needs: does the offer answer at least one of the person's needs?
+        // Free-text keywords (panel "Autres mots-clés") are stored with the
+        // skills; let them count as needs too (e.g. "anglais" → languages).
+        const skillIds = new Set(SKILL_TAGS.map((t) => t.id));
+        const freeWords = (opp.requiredSkills ?? []).filter((s) => !skillIds.has(s));
+        const offerNeeds = toTagIds([...(opp.suitableForNeeds ?? []), ...freeWords], NEED_TAGS);
+        for (const n of NEEDS_BY_TYPE[opp.type] ?? []) offerNeeds.add(n);
+        if (offerNeeds.size > 0 && userNeedTags.size > 0) {
+          maxScore += NEED_WEIGHT;
+          const matched = [...offerNeeds].filter((t) => userNeedTags.has(t));
+          // One answered need already makes the offer relevant; two or more = full.
+          score += Math.min(1, matched.length / Math.min(2, offerNeeds.size)) * NEED_WEIGHT;
+          for (const id of matched) {
+            const t = tagById(NEED_TAGS, id)!;
+            reasonsFr.push(t.fr);
+            reasonsAr.push(t.ar);
+          }
         }
       }
 
-      // Needs match (weight: 35%)
-      const suitableNeeds = opp.suitableForNeeds ?? [];
-      if (suitableNeeds.length > 0) {
-        maxScore += 35;
-        const matched = suitableNeeds.filter((sn) =>
-          userNeeds.includes(sn.toLowerCase()),
-        );
-        const needsScore = Math.round(
-          (matched.length / suitableNeeds.length) * 35,
-        );
-        score += needsScore;
-        if (matched.length > 0) {
-          reasons.push('يلبي احتياجاتك');
-        }
-      }
-
-      // Interest match (weight: 25%)
-      if (userInterests.length > 0) {
-        maxScore += 25;
-        const titleLower = opp.title.toLowerCase();
-        const descLower = (opp.description ?? '').toLowerCase();
-        const interestMatch = userInterests.some(
-          (i) => titleLower.includes(i) || descLower.includes(i),
-        );
-        if (interestMatch) {
-          score += 25;
-          reasons.push('يتوافق مع اهتماماتك');
-        }
-      }
-
-      const effectiveMax = maxScore > 0 ? maxScore : 100;
-      const percentage = maxScore > 0 ? Math.round((score / effectiveMax) * 100) : 10;
-
+      const matchScore = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
       return {
         ...opp,
-        matchScore: percentage,
-        matchReasons: reasons,
+        matchScore,
+        // App 1.0.1 shows `matchReasons` as-is and does not send its language,
+        // so keep them short and bilingual; FR/AR lists are for later versions.
+        matchReasons: reasonsFr.map((fr, i) => `${fr} · ${reasonsAr[i]}`),
+        matchReasonsFr: reasonsFr,
+        matchReasonsAr: reasonsAr,
       };
     });
 

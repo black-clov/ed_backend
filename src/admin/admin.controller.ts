@@ -127,6 +127,12 @@ export class AdminController {
   }
 
   // ── Opportunities CRUD ──────────────────────────
+  /** Skill / need checkbox options for the offer form (same lists as the app). */
+  @Get('opportunities/tags')
+  async getOpportunityTags() {
+    return this.opportunitiesService.getTagOptions();
+  }
+
   @Get('opportunities')
   async getOpportunities() {
     return this.opportunitiesService.findAll();

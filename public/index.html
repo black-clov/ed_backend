@@ -89,6 +89,10 @@
     .modal-body { padding:20px 24px; }
     .modal-footer { padding:16px 24px; border-top:1px solid var(--border); display:flex; gap:10px; justify-content:flex-end; }
     .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .tag-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px 12px; }
+    .tag-grid label { display:flex; align-items:center; gap:8px; margin:0; font-size:.86rem; color:var(--text); cursor:pointer; }
+    .tag-grid input { width:auto; accent-color:var(--indigo); }
+    .tag-hint { font-size:.76rem; color:var(--muted); margin-top:6px; }
 
     /* Source toggle */
     .source-toggle { display:flex; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:3px; margin-top:6px; }
@@ -411,11 +415,16 @@
       <label>Description</label>
       <textarea id="o-description" placeholder="Description de l'offre"></textarea>
 
-      <label>Compétences requises (séparées par des virgules)</label>
-      <input type="text" id="o-skills" placeholder="communication, vente, informatique">
+      <label>Compétences requises</label>
+      <div id="o-skills-box" class="tag-grid"></div>
 
-      <label>Adaptée aux besoins (séparés par des virgules)</label>
-      <input type="text" id="o-needs" placeholder="formation, expérience, accompagnement">
+      <label>Besoins des jeunes auxquels l’offre répond</label>
+      <div id="o-needs-box" class="tag-grid"></div>
+      <p class="tag-hint">Le type d’offre compte déjà : <b>Emploi</b> → « Trouver un emploi », <b>Stage</b> → « Stage / expérience pratique », <b>Formation</b> → « Apprendre / se former ».</p>
+
+      <label>Autres mots-clés (facultatif, séparés par des virgules)</label>
+      <input type="text" id="o-extra" placeholder="ex. : informatique, anglais">
+      <p class="tag-hint">Ces mots sont aussi reconnus pour le classement des offres, mais les cases ci-dessus sont plus fiables.</p>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeOppModal()">Annuler</button>
@@ -956,9 +965,24 @@
   // ── offres (opportunities) ──────────────────────────────────────────
   let oppsData = [];
   const oppTypeLbl = { job: 'Emploi', internship: 'Stage', training: 'Formation' };
+  let oppTags = { skills: [], needs: [] };  // checkbox options, same lists as the app
+
+  async function ensureOppTags() {
+    if (oppTags.skills.length) return;
+    oppTags = await apiFetch('GET', '/admin/opportunities/tags') ?? { skills: [], needs: [] };
+  }
+  function tagLabel(list, v) { return (list.find(t => t.id === v) || {}).fr || v; }
+
+  function renderTagBoxes(selectedSkills, selectedNeeds) {
+    const box = (list, selected, cls) => list.map(t => `
+      <label><input type="checkbox" class="${cls}" value="${esc(t.id)}" ${selected.includes(t.id) ? 'checked' : ''}> ${esc(t.fr)}</label>`).join('');
+    document.getElementById('o-skills-box').innerHTML = box(oppTags.skills, selectedSkills, 'o-skill');
+    document.getElementById('o-needs-box').innerHTML = box(oppTags.needs, selectedNeeds, 'o-need');
+  }
 
   async function loadOpportunities() {
     try {
+      await ensureOppTags();
       oppsData = await apiFetch('GET', '/admin/opportunities') ?? [];
       document.getElementById('opps-count').textContent = `Offres (${oppsData.length})`;
       const tbody = document.getElementById('opps-body');
@@ -968,7 +992,7 @@
           <td><div class="truncate" title="${esc(o.title)}">${esc(o.title)}</div></td>
           <td><span class="badge badge-cat">${esc(oppTypeLbl[o.type]??o.type)}</span></td>
           <td>${esc(o.location??'—')}</td>
-          <td style="font-size:.82rem;color:var(--muted)">${esc((o.requiredSkills??[]).join(', ')) || '—'}</td>
+          <td style="font-size:.82rem;color:var(--muted)">${esc((o.requiredSkills??[]).map(s => tagLabel(oppTags.skills, s)).join(', ')) || '—'}</td>
           <td><div class="action-btns">
             <button class="icon-btn icon-btn-edit" onclick="editOpp('${esc(o.id)}')" title="Modifier">✏️</button>
             <button class="icon-btn icon-btn-delete" onclick="confirmDeleteOpp('${esc(o.id)}','${esc(o.title)}')" title="Supprimer">🗑️</button>
@@ -984,8 +1008,8 @@
     document.getElementById('o-type').value = 'job';
     document.getElementById('o-location').value = '';
     document.getElementById('o-description').value = '';
-    document.getElementById('o-skills').value = '';
-    document.getElementById('o-needs').value = '';
+    renderTagBoxes([], []);
+    document.getElementById('o-extra').value = '';
     document.getElementById('opp-overlay').classList.add('open');
   }
 
@@ -998,8 +1022,15 @@
     document.getElementById('o-type').value = o.type ?? 'job';
     document.getElementById('o-location').value = o.location ?? '';
     document.getElementById('o-description').value = o.description ?? '';
-    document.getElementById('o-skills').value = (o.requiredSkills ?? []).join(', ');
-    document.getElementById('o-needs').value = (o.suitableForNeeds ?? []).join(', ');
+    // Known tag ids tick their box; older free-text words go to "Autres mots-clés"
+    // so nothing is lost when the offer is saved again.
+    const skillIds = oppTags.skills.map(t => t.id), needIds = oppTags.needs.map(t => t.id);
+    const skills = o.requiredSkills ?? [], needs = o.suitableForNeeds ?? [];
+    renderTagBoxes(skills.filter(s => skillIds.includes(s)), needs.filter(n => needIds.includes(n)));
+    document.getElementById('o-extra').value = [
+      ...skills.filter(s => !skillIds.includes(s)),
+      ...needs.filter(n => !needIds.includes(n)),
+    ].join(', ');
     document.getElementById('opp-overlay').classList.add('open');
   }
 
@@ -1015,8 +1046,12 @@
     const type     = document.getElementById('o-type').value;
     const location = document.getElementById('o-location').value.trim();
     const desc     = document.getElementById('o-description').value.trim();
-    const skills   = splitList(document.getElementById('o-skills').value);
-    const needs    = splitList(document.getElementById('o-needs').value);
+    const checked  = cls => [...document.querySelectorAll('.' + cls + ':checked')].map(c => c.value);
+    const extra    = splitList(document.getElementById('o-extra').value);
+    // Extra words are stored with the skills; the server maps each word to
+    // skills and/or needs, so they count wherever they belong.
+    const skills   = [...checked('o-skill'), ...extra];
+    const needs    = checked('o-need');
 
     if (!title || !location) { toast('Veuillez remplir les champs obligatoires (titre, lieu)', 'error'); return; }
 
