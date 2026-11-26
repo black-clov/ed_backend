@@ -20,6 +20,12 @@ import { SupportPreferenceEntity } from '../support/entities/support-preference.
 import { RecommendationEntity } from '../recommendations/entities/recommendation.entity';
 import { MentorConnectionEntity } from '../mentors/entities/mentor-connection.entity';
 import { AnalyticsEventEntity } from '../analytics/entities/analytics-event.entity';
+import { INTEREST_ITEMS } from '../questionnaire/interests.catalog';
+import {
+  PERSONALITY_QUESTIONS,
+  SOFT_SKILL_QUESTIONS,
+  readableAnswers,
+} from '../questionnaire/profile-questions.catalog';
 
 @Injectable()
 export class AdminService implements OnModuleInit {
@@ -172,7 +178,16 @@ export class AdminService implements OnModuleInit {
     return {
       user,
       sections: {
-        questionnaire: questionnaire || null,
+        // Readable summary (FR labels) instead of raw ids.
+        questionnaire: questionnaire
+          ? {
+              "Centres d'intérêt": INTEREST_ITEMS
+                .filter((i) => Object.values(questionnaire.interestCategories ?? {}).flat().includes(i.id))
+                .map((i) => i.fr),
+              'Personnalité': readableAnswers(PERSONALITY_QUESTIONS, questionnaire.personalityAnswers),
+              'Savoir-être': readableAnswers(SOFT_SKILL_QUESTIONS, questionnaire.softSkillsAnswers),
+            }
+          : null,
         cv: cv?.payload || null,
         interviews: interviews || [],
         businessPlan: businessPlan || null,

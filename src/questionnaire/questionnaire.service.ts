@@ -4,6 +4,23 @@ import { Repository } from 'typeorm';
 import { SubmitQuestionnaireAnswersDto } from './dto/submit-questionnaire-answers.dto';
 import { QuestionnaireAnswerEntity } from './entities/questionnaire-answer.entity';
 import { INTEREST_CATALOG } from './interests.catalog';
+import {
+  PERSONALITY_QUESTIONS,
+  ProfileQuestion,
+  SOFT_SKILL_QUESTIONS,
+  validAnswers,
+} from './profile-questions.catalog';
+
+function toApiQuestion(q: ProfileQuestion) {
+  return {
+    id: q.id,
+    question: q.ar,
+    options: q.choices.map((c) => c.ar),
+    questionFr: q.fr,
+    questionAr: q.ar,
+    choices: q.choices,
+  };
+}
 
 @Injectable()
 export class QuestionnaireService {
@@ -24,19 +41,10 @@ export class QuestionnaireService {
           icon: c.icon,
           subItems: c.subItems.map((s) => ({ id: s.id, label: s.ar, labelFr: s.fr, labelAr: s.ar })),
         })),
-        personalityQuestions: [
-          { id: 'p1', question: 'كنستمتع بالخدمة مع ناس آخرين فالفريق' },
-          { id: 'p2', question: 'كنحس براسي مرتاح ملي كنهضر قدام الناس' },
-          { id: 'p3', question: 'كنبغي نحل المشاكل العملية' },
-        ],
-        softSkillsQuestions: [
-          { id: 's1', question: 'واش كتجي فالوقت ديالك للخدمة؟', options: ['ديما', 'غالبا', 'بعض المرات', 'قليل'] },
-          { id: 's2', question: 'كيفاش كتعامل مع الضغط فالخدمة؟', options: ['كنبقى هادي وكنلقى حلول', 'كنحاول نتأقلم', 'كنتوتر شوية', 'صعيب عليا'] },
-          { id: 's3', question: 'واش كتقبل الملاحظات من الناس؟', options: ['بكل ارتياح', 'غالبا نعم', 'كيقلقني شوية', 'ما كنقبلش بسهولة'] },
-          { id: 's4', question: 'واش كتقدر تخدم بوحدك بلا ما حد يراقبك؟', options: ['نعم، كنكون مستقل', 'غالبا نعم', 'كنحتاج توجيه أحيانا', 'كنحتاج مساعدة ديما'] },
-          { id: 's5', question: 'كيفاش كتنظم الوقت ديالك؟', options: ['عندي خطة واضحة ديما', 'كنحاول نتنظم', 'مرات كنضيع الوقت', 'ما عنديش تنظيم'] },
-          { id: 's6', question: 'واش كتواصل مزيان مع الآخرين؟', options: ['نعم، بسهولة', 'غالبا', 'كنلقى صعوبة أحيانا', 'صعيب عليا'] },
-        ],
+        // `question` / `options` keep the old Arabic-only shape; 1.0.2+ uses
+        // questionFr / questionAr and `choices` [{ id, fr, ar }].
+        personalityQuestions: PERSONALITY_QUESTIONS.map(toApiQuestion),
+        softSkillsQuestions: SOFT_SKILL_QUESTIONS.map(toApiQuestion),
         workPreferences: ['remote', 'hybrid', 'on-site', 'flexible-hours'],
       },
     };
@@ -60,20 +68,48 @@ export class QuestionnaireService {
       const picked = [...new Set((selections?.[cat.id] ?? []).filter((id) => allowed.has(id)))];
       if (picked.length) valid[cat.id] = picked;
     }
-    const flat = Object.values(valid).flat();
-
-    let row = await this.answersRepo.findOne({ where: { userId } });
-    if (!row) {
-      row = this.answersRepo.create({
-        userId,
-        personalityAnswers: {},
-        workPreferences: [],
-      });
-    }
+    const row = await this.getOrCreateRow(userId);
     row.interestCategories = valid;
-    row.interests = flat;
+    row.interests = Object.values(valid).flat();
     await this.answersRepo.save(row);
     return { selections: valid };
+  }
+
+  /** Saved "Personnalité" and "Savoir-être" answers: { questionId: choiceId }. */
+  async getMyAnswers(userId: string) {
+    const row = await this.answersRepo.findOne({ where: { userId } });
+    return {
+      personality: validAnswers(PERSONALITY_QUESTIONS, row?.personalityAnswers),
+      softSkills: validAnswers(SOFT_SKILL_QUESTIONS, row?.softSkillsAnswers),
+    };
+  }
+
+  async saveMyPersonality(userId: string, answers: Record<string, string>) {
+    const row = await this.getOrCreateRow(userId);
+    row.personalityAnswers = validAnswers(PERSONALITY_QUESTIONS, answers);
+    await this.answersRepo.save(row);
+    return { personality: row.personalityAnswers };
+  }
+
+  async saveMySoftSkills(userId: string, answers: Record<string, string>) {
+    const row = await this.getOrCreateRow(userId);
+    row.softSkillsAnswers = validAnswers(SOFT_SKILL_QUESTIONS, answers);
+    await this.answersRepo.save(row);
+    return { softSkills: row.softSkillsAnswers };
+  }
+
+  /** One questionnaire row per user (required jsonb columns get empty values). */
+  private async getOrCreateRow(userId: string) {
+    const row = await this.answersRepo.findOne({ where: { userId } });
+    if (row) return row;
+    return this.answersRepo.create({
+      userId,
+      interests: [],
+      interestCategories: {},
+      personalityAnswers: {},
+      softSkillsAnswers: {},
+      workPreferences: [],
+    });
   }
 
   async submitAnswers(dto: SubmitQuestionnaireAnswersDto) {
