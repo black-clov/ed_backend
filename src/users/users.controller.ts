@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, ForbiddenException, Get, Param, Patch, Post, Put, Req, Res, HttpStatus, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, ForbiddenException, Get, Logger, Param, Patch, Post, Put, Req, Res, HttpStatus, UseGuards } from '@nestjs/common';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import type { Request, Response } from 'express';
@@ -10,6 +10,8 @@ import { Public } from '../auth/public.decorator';
 
 @Controller('users')
 export class UsersController {
+  private readonly logger = new Logger(UsersController.name);
+
   constructor(private readonly usersService: UsersService) {}
 
   /** The authenticated user's own gender (mascot) and chosen track. */
@@ -51,16 +53,18 @@ export class UsersController {
   @Public()
   @Post()
   async create(@Body() dto: CreateUserDto, @Res() res: Response) {
-    console.log('POST /api/users called with:', dto);
+    // Never log the request body: it contains the password in clear text.
     try {
       const user = await this.usersService.create(dto);
-      console.log('User created successfully:', user);
+      this.logger.log(`User registered: ${user.id}`);
       return res.status(HttpStatus.CREATED).json(user);
     } catch (err: any) {
-      console.error('Error creating user:', err);
       if (err.status === 409) {
+        // Expected case (email already used): a warning, not an error.
+        this.logger.warn('Registration refused: email already registered');
         return res.status(HttpStatus.CONFLICT).json({ message: err.message });
       }
+      this.logger.error(`Registration failed: ${err?.message ?? err}`);
       return res.status(HttpStatus.BAD_REQUEST).json({ message: err.message || 'Registration failed' });
     }
   }

@@ -116,11 +116,11 @@ export class UsersService implements OnModuleInit {
       const { passwordHash: _, ...result } = saved;
       return result;
     } catch (err: any) {
-      console.error('Error in UsersService.create:', err);
       if (err.code === '23505') {
-        // Unique violation (duplicate email)
+        // Unique violation (duplicate email): expected, logged by the controller.
         throw new ConflictException('Email already registered');
       }
+      console.error('Error in UsersService.create:', err?.message ?? err);
       throw new InternalServerErrorException('Could not create user');
     }
   }
