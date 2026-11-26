@@ -14,9 +14,12 @@ import {
   NEEDS_BY_TYPE,
   SKILL_TAGS,
   Tag,
+  hasKeyword,
   tagById,
   toTagIds,
+  wordText,
 } from './matching';
+import { INTEREST_ITEMS } from '../questionnaire/interests.catalog';
 
 @Injectable()
 export class OpportunitiesService {
@@ -80,18 +83,25 @@ export class OpportunitiesService {
    * the old misleading flat 10%.
    */
   async matchForUser(userId: string) {
-    const [allOpportunities, userSkills, needsRow] = await Promise.all([
+    const [allOpportunities, userSkills, needsRow, questionnaire] = await Promise.all([
       this.opportunityRepo.find(),
       this.skillRepo.find({ where: { userId } }),
       this.needsRepo.findOne({ where: { userId }, order: { createdAt: 'DESC' } }),
+      this.questionnaireRepo.findOne({ where: { userId } }),
     ]);
 
     const userSkillTags = toTagIds(userSkills.map((s) => s.name), SKILL_TAGS);
     const userNeedTags = toTagIds(needsRow?.needs ?? [], NEED_TAGS);
-    const profileEmpty = userSkillTags.size === 0 && userNeedTags.size === 0;
+    const pickedInterestIds = new Set(
+      Object.values(questionnaire?.interestCategories ?? {}).flat(),
+    );
+    const userInterests = INTEREST_ITEMS.filter((i) => pickedInterestIds.has(i.id));
+    const profileEmpty =
+      userSkillTags.size === 0 && userNeedTags.size === 0 && userInterests.length === 0;
 
-    const SKILL_WEIGHT = 55;
-    const NEED_WEIGHT = 45;
+    const SKILL_WEIGHT = 40;
+    const NEED_WEIGHT = 35;
+    const INTEREST_WEIGHT = 25;
 
     const scored = allOpportunities.map((opp) => {
       const reasonsFr: string[] = [];
@@ -131,6 +141,22 @@ export class OpportunitiesService {
             const t = tagById(NEED_TAGS, id)!;
             reasonsFr.push(t.fr);
             reasonsAr.push(t.ar);
+          }
+        }
+
+        // Interests: is the offer about an area the person picked?
+        if (userInterests.length > 0) {
+          maxScore += INTEREST_WEIGHT;
+          const text = wordText(`${opp.title} ${opp.description ?? ''}`);
+          const hits = userInterests.filter((i) =>
+            [i.fr, i.ar, ...i.keywords].some((k) => hasKeyword(text, k)),
+          );
+          if (hits.length > 0) {
+            score += INTEREST_WEIGHT;
+            for (const i of hits.slice(0, 2)) {
+              reasonsFr.push(i.fr);
+              reasonsAr.push(i.ar);
+            }
           }
         }
       }

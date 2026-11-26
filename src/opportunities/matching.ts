@@ -94,6 +94,23 @@ export function toTagIds(values: string[] | null | undefined, vocab: Tag[]): Set
   return out;
 }
 
+/** Normalised text padded with spaces, words separated by single spaces. */
+export function wordText(s: string): string {
+  return ' ' + normalize(s).replace(/[^\p{L}\p{N}]+/gu, ' ').trim() + ' ';
+}
+
+/**
+ * Whole-word keyword search in a `wordText()` string. Keywords of 6+ letters
+ * also match as a word prefix (plurals / derived forms: "developpeur" →
+ * "developpeurs"); short ones must match exactly ("son" ≠ "maison").
+ */
+export function hasKeyword(paddedText: string, keyword: string): boolean {
+  const kw = wordText(keyword).trim();
+  if (!kw) return false;
+  if (paddedText.includes(' ' + kw + ' ')) return true;
+  return kw.length >= 6 && paddedText.includes(' ' + kw);
+}
+
 export function tagById(vocab: Tag[], id: string): Tag | undefined {
   return vocab.find((t) => t.id === id);
 }

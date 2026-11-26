@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SubmitQuestionnaireAnswersDto } from './dto/submit-questionnaire-answers.dto';
 import { QuestionnaireAnswerEntity } from './entities/questionnaire-answer.entity';
+import { INTEREST_CATALOG } from './interests.catalog';
 
 @Injectable()
 export class QuestionnaireService {
@@ -14,56 +15,15 @@ export class QuestionnaireService {
   getQuestionnaire() {
     return {
       sections: {
-        interestCategories: [
-          {
-            id: 'technology',
-            label: 'التكنولوجيا',
-            icon: 'computer',
-            subItems: [
-              { id: 'tech_web', label: 'تطوير المواقع' },
-              { id: 'tech_mobile', label: 'تطبيقات الهاتف' },
-              { id: 'tech_data', label: 'تحليل البيانات' },
-              { id: 'tech_design', label: 'التصميم الرقمي' },
-              { id: 'tech_support', label: 'الدعم التقني' },
-            ],
-          },
-          {
-            id: 'creativity',
-            label: 'الإبداع',
-            icon: 'palette',
-            subItems: [
-              { id: 'crea_art', label: 'الفنون والحرف' },
-              { id: 'crea_photo', label: 'التصوير الفوتوغرافي' },
-              { id: 'crea_writing', label: 'الكتابة والتحرير' },
-              { id: 'crea_music', label: 'الموسيقى والصوت' },
-              { id: 'crea_fashion', label: 'الأزياء والتصميم' },
-            ],
-          },
-          {
-            id: 'manual_service',
-            label: 'الخدمات اليدوية',
-            icon: 'build',
-            subItems: [
-              { id: 'man_cook', label: 'الطبخ والمطعمة' },
-              { id: 'man_agri', label: 'الفلاحة' },
-              { id: 'man_mech', label: 'الميكانيك والصيانة' },
-              { id: 'man_beauty', label: 'التجميل والحلاقة' },
-              { id: 'man_craft', label: 'الصناعة التقليدية' },
-            ],
-          },
-          {
-            id: 'people',
-            label: 'التعامل مع الناس',
-            icon: 'people',
-            subItems: [
-              { id: 'ppl_sales', label: 'البيع والتجارة' },
-              { id: 'ppl_care', label: 'الرعاية الصحية' },
-              { id: 'ppl_teach', label: 'التعليم والتدريب' },
-              { id: 'ppl_social', label: 'العمل الاجتماعي' },
-              { id: 'ppl_tourism', label: 'السياحة والضيافة' },
-            ],
-          },
-        ],
+        // `label` stays Arabic for apps ≤ 1.0.1; `labelFr` / `labelAr` for 1.0.2+.
+        interestCategories: INTEREST_CATALOG.map((c) => ({
+          id: c.id,
+          label: c.ar,
+          labelFr: c.fr,
+          labelAr: c.ar,
+          icon: c.icon,
+          subItems: c.subItems.map((s) => ({ id: s.id, label: s.ar, labelFr: s.fr, labelAr: s.ar })),
+        })),
         personalityQuestions: [
           { id: 'p1', question: 'كنستمتع بالخدمة مع ناس آخرين فالفريق' },
           { id: 'p2', question: 'كنحس براسي مرتاح ملي كنهضر قدام الناس' },
@@ -82,6 +42,39 @@ export class QuestionnaireService {
     };
   }
 
+
+  /** The user's saved interests: { categoryId: [subItemId, ...] }. */
+  async getMyInterests(userId: string) {
+    const row = await this.answersRepo.findOne({ where: { userId } });
+    return { selections: row?.interestCategories ?? {} };
+  }
+
+  /**
+   * Save the user's interests (one row per user, created on first save).
+   * Unknown ids are dropped so only catalogue values reach the matching.
+   */
+  async saveMyInterests(userId: string, selections: Record<string, string[]>) {
+    const valid: Record<string, string[]> = {};
+    for (const cat of INTEREST_CATALOG) {
+      const allowed = new Set(cat.subItems.map((s) => s.id));
+      const picked = [...new Set((selections?.[cat.id] ?? []).filter((id) => allowed.has(id)))];
+      if (picked.length) valid[cat.id] = picked;
+    }
+    const flat = Object.values(valid).flat();
+
+    let row = await this.answersRepo.findOne({ where: { userId } });
+    if (!row) {
+      row = this.answersRepo.create({
+        userId,
+        personalityAnswers: {},
+        workPreferences: [],
+      });
+    }
+    row.interestCategories = valid;
+    row.interests = flat;
+    await this.answersRepo.save(row);
+    return { selections: valid };
+  }
 
   async submitAnswers(dto: SubmitQuestionnaireAnswersDto) {
     const userId = dto.userId ?? 'anonymous';

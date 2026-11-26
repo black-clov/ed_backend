@@ -1,6 +1,8 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Put, Req } from '@nestjs/common';
+import type { Request } from 'express';
 import { QuestionnaireService } from './questionnaire.service';
 import { SubmitQuestionnaireAnswersDto } from './dto/submit-questionnaire-answers.dto';
+import { SaveInterestsDto } from './dto/save-interests.dto';
 
 @Controller('questionnaire')
 export class QuestionnaireController {
@@ -11,8 +13,21 @@ export class QuestionnaireController {
     return this.questionnaireService.getQuestionnaire();
   }
 
+  /** The logged-in user's interests ("Centres d'intérêt" screen). */
+  @Get('me/interests')
+  getMyInterests(@Req() req: Request) {
+    return this.questionnaireService.getMyInterests((req as any).user?.sub as string);
+  }
+
+  @Put('me/interests')
+  saveMyInterests(@Req() req: Request, @Body() dto: SaveInterestsDto) {
+    return this.questionnaireService.saveMyInterests((req as any).user?.sub as string, dto.selections);
+  }
+
   @Post('answers')
-  submitAnswers(@Body() dto: SubmitQuestionnaireAnswersDto) {
+  submitAnswers(@Body() dto: SubmitQuestionnaireAnswersDto, @Req() req: Request) {
+    // Always write for the logged-in user, never for an id taken from the body.
+    dto.userId = (req as any).user?.sub as string;
     return this.questionnaireService.submitAnswers(dto);
   }
 }
